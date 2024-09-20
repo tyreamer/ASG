@@ -1,0 +1,72 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using ASG.Models
+@using ASG.Services
+@using Microsoft.AspNetCore.Components
+@inject IJSRuntime JsRuntime
+@inject FirebaseService FirebaseService
+@inject NavigationManager Navigation
+
+<MudGrid JustifyContent="Center" AlignItems="Center" Style="height: 100vh;">
+    <MudItem JustifyContent="Center" AlignItems="Center">
+        <AuthorizeView>
+            <Authorized>
+                <MudPaper Class="pa-4">
+                    <MudText Typo="Typo.h4">Anything sounds good.</MudText>
+                    <MudDivider Class="mb-4" />
+                </MudPaper>
+            </Authorized>
+            <NotAuthorized>
+                <MudPaper Class="pa-4">
+                    <MudImage Src="images/logo.png" Fluid="true" />
+                    <MudDivider Class="mb-4" />
+                    <MudStack AlignItems="AlignItems.Center" JustifyContent="Center" Spacing="2">
+                        <MudButton Class="google-sign-in-button" OnClick="SignInWithGoogle">
+                            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo" />
+                            Sign in with Google
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState> AuthStateTask { get; set; }
+
+    private async Task SignInWithGoogle()
+    {
+        var firebaseUser = await FirebaseService.SignInWithGoogleAsync();
+        if (firebaseUser != null)
+        {
+            if (AuthStateProvider is ASGAuthenticationStateProvider customAuthStateProvider)
+            {
+                await customAuthStateProvider.MarkUserAsAuthenticated(firebaseUser);
+            }
+        }
+    }
+
+    private async Task CheckAuthenticationState()
+    {
+        var authState = await AuthStateTask;
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var userName = user.FindFirst(ClaimTypes.Name)?.Value;
+            Console.WriteLine($"User is authenticated: {userName}");
+        }
+        else
+        {
+            // User is not authenticated
+            Console.WriteLine("User is not authenticated");
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckAuthenticationState();
+    }
+}
