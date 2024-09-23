@@ -25,7 +25,7 @@ namespace ASGBackend.Agents
             {
                 DietaryRestrictions = string.Join(",", user.Preferences.DietaryRestrictions),
                 CuisinePreferences = string.Join(",", user.Preferences.FavoriteCuisines),
-                WeeklyBudget = (float)user.WeeklyBudget.Amount, // Changed to float
+                BudgetPerMeal = (float)user.BudgetPerMeal.Amount, // Changed to float
                 HouseholdSize = user.HouseholdSize,
                 CookingSkillLevel = (float)user.CookingSkillLevel
             }).ToList();
@@ -48,7 +48,7 @@ namespace ASGBackend.Agents
             {
                 DietaryRestrictions = string.Join(",", user.Preferences.DietaryRestrictions),
                 CuisinePreferences = string.Join(",", user.Preferences.FavoriteCuisines),
-                WeeklyBudget = (float)user.WeeklyBudget.Amount, // Changed to float
+                BudgetPerMeal = (float)user.BudgetPerMeal.Amount,
                 HouseholdSize = user.HouseholdSize,
                 CookingSkillLevel = (float)user.CookingSkillLevel
             });
@@ -61,7 +61,7 @@ namespace ASGBackend.Agents
     {
         public string DietaryRestrictions { get; set; } = string.Empty;
         public string CuisinePreferences { get; set; } = string.Empty;
-        public float WeeklyBudget { get; set; } // Changed to float
+        public float BudgetPerMeal { get; set; }
         public int HouseholdSize { get; set; }
         public float CookingSkillLevel { get; set; }
     }

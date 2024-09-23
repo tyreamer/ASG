@@ -1,4 +1,7 @@
+using ASG.Services;
 using ASGBackend.Agents;
+using ASGBackend.Interfaces;
+using ASGBackend.Repositories;
 using ASGBackend.Services;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
@@ -26,6 +29,23 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<FirebaseService>();
 builder.Services.AddHttpClient<OpenAIService>();
 builder.Services.AddSingleton<UserClusteringAgent>();
+builder.Services.AddScoped<MealPlanService>();
+builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Register AIAgentService with dependencies
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient();
+    var openAIApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+    if (string.IsNullOrEmpty(openAIApiKey))
+    {
+        throw new InvalidOperationException("The OPENAI_API_KEY environment variable is not set.");
+    }
+    return new AIAgentService(httpClient, openAIApiKey);
+});
 
 // Configure the URLs and ports based on the environment
 if (builder.Environment.IsDevelopment())

@@ -17,5 +17,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, ASGAuthenticationStatePr
 builder.Services.AddScoped<AuthenticationService>();
 builder.Services.AddMudServices();
 builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5050/") });
+builder.Services.AddScoped<MealPlanClientService>();
 
 await builder.Build().RunAsync();

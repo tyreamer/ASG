@@ -34,7 +34,7 @@ namespace ASG.Services
                     return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
                 }
 
-                Console.WriteLine($"GetAuthenticationStateAsync User Found: {user.DisplayName}");
+                Console.WriteLine($"User Found: {user.DisplayName}");
 
                 var identity = new ClaimsIdentity(new[]
                 {

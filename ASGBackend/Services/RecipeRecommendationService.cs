@@ -27,7 +27,7 @@ namespace ASGBackend.Services
 
             string userPreferences = $"Dietary restrictions: {string.Join(", ", user.Preferences.DietaryRestrictions)}, " +
                                         $"Cuisine preferences: {string.Join(", ", user.Preferences.FavoriteCuisines)}, " +
-                                        $"Weekly budget: {user.WeeklyBudget} {user.WeeklyBudget.Currency}, " +
+                                        $"Budget Per Meal: {user.BudgetPerMeal} {user.BudgetPerMeal.Currency}, " +
                                         $"Household size: {user.HouseholdSize}, " +
                                         $"Cooking skill level: {user.CookingSkillLevel}";
 

@@ -8,7 +8,7 @@
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
-        public Budget WeeklyBudget { get; set; } = new Budget();
+        public Budget BudgetPerMeal { get; set; } = new Budget();
         public int HouseholdSize { get; set; } = 1;
         public UserPreferences Preferences { get; set; } = new UserPreferences();
 
