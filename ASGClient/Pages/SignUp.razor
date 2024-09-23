@@ -1,0 +1,58 @@
+﻿@page "/signup"
+@using ASGShared.Models
+@using ASG.Services
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationService AuthService
+@using MudBlazor
+
+<MudContainer Class="min-h-screen bg-gray-50">
+    <MudContainer Class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <MudContainer Class="px-4 py-6 sm:px-0">
+            <MudText Typo="Typo.h4">Sign Up</MudText>
+            <MudForm @ref="form" OnValidSubmit="HandleValidSubmit">
+                <MudTextField @bind-Value="user.Name" Label="Name" Required="true" />
+                <MudTextField @bind-Value="user.Email" Label="Email" Required="true" Disabled="true" />
+                <MudTextField @bind-Value="user.DisplayName" Label="Display Name" Required="true" />
+                <MudTextField @bind-Value="user.HouseholdSize" Label="Household Size" Required="true" />
+                <MudContainer Class="my-4">
+                    <MudText Typo="Typo.subtitle1">Cooking Skill Level: @user.CookingSkillLevel</MudText>
+                    <MudSlider @bind-Value="user.CookingSkillLevel" Min="1" Max="10" Step="1" Style="width: 100%;" />
+                </MudContainer>
+                <MudButton Type="Submit" Variant="Variant.Filled" Color="Color.Primary">Sign Up</MudButton>
+            </MudForm>
+        </MudContainer>
+    </MudContainer>
+</MudContainer>
+
+@code {
+    private MudForm form;
+    private User user = new User();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var email = await AuthService.GetAuthenticatedUserEmailAsync();
+        if (email != null)
+        {
+            user.Email = email;
+        }
+        else
+        {
+            Navigation.NavigateTo("/signin");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var client = HttpClientFactory.CreateClient();
+        var response = await client.PostAsJsonAsync("api/mealplanner/user", user);
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            // Handle error
+        }
+    }
+}

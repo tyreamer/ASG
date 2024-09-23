@@ -14,11 +14,6 @@
     <MudAppBar Elevation="0" Color="Color.Transparent">
         <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <MudText Typo="Typo.h4" Class="text-white">Anything sounds good.</MudText>
-            <!--TODO Add avatar
-                <MudAvatar Class="bg-secondary">
-                <MudText Typo="Typo.body1" Class="text-white">let's keep it simple.</MudText>
-            </MudAvatar>
-            -->
         </MudContainer>
     </MudAppBar>
 
@@ -80,7 +75,11 @@
 
     private async Task SignInWithGoogle()
     {
-        await AuthService.SignInWithGoogleAsync();
+        var user = await AuthService.SignInWithGoogleAsync();
+        if (user != null)
+        {
+            Navigation.NavigateTo($"/signup?name={Uri.EscapeDataString(user.DisplayName)}&email={Uri.EscapeDataString(user.Email)}");
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -88,6 +87,24 @@
         if (AuthStateTask != null)
         {
             await AuthenticationService.CheckAuthenticationStateAsync(AuthStateTask);
+        }
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userClaims = authState.User;
+
+        if (userClaims.Identity != null && userClaims.Identity.IsAuthenticated)
+        {
+            var email = userClaims.FindFirst(c => c.Type == ClaimTypes.Email)?.Value;
+            var response = await Http.GetAsync($"api/mealplanner/user/{email}");
+            if (!response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/signup");
+                return;
+            }
+        }
+        else
+        {
+            Navigation.NavigateTo("/signin");
         }
 
         weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync();

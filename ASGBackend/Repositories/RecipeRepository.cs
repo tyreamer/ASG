@@ -13,7 +13,7 @@ namespace ASGBackend.Repositories
 
         public Task AddRecipe(Recipe recipe)
         {
-            recipe.RecipeId = _recipes.Count + 1;
+            recipe.Id = _recipes.Count + 1;
             _recipes.Add(recipe);
             return Task.CompletedTask;
         }
@@ -26,7 +26,7 @@ namespace ASGBackend.Repositories
 
         public Task AddMealPlan(MealPlan mealPlan)
         {
-            mealPlan.MealPlanId = _mealPlans.Count + 1;
+            mealPlan.Id = _mealPlans.Count + 1;
             _mealPlans.Add(mealPlan);
             return Task.CompletedTask;
         }

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASGClient", "ASGClient\ASGC
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASGBackend", "ASGBackend\ASGBackend.csproj", "{B897D576-6C07-41EC-ACD8-9B7647420517}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASGShared", "ASGShared\ASGShared.csproj", "{C69C83B4-8A78-4A02-A94F-16A3137A5E0B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASGShared", "ASGShared\ASGShared.csproj", "{C69C83B4-8A78-4A02-A94F-16A3137A5E0B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
