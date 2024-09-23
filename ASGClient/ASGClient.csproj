@@ -27,4 +27,8 @@
     <Folder Include="Components\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ASGShared\ASGShared.csproj" />
+  </ItemGroup>
+
 </Project>

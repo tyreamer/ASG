@@ -37,30 +37,25 @@ namespace ASG.Services
             var stsTokenManagerElement = (JsonElement)stsTokenManagerJson;
             var stsTokenManager = new StsTokenManager
             {
-                RefreshToken = stsTokenManagerElement.GetProperty("refreshToken").GetString(),
-                AccessToken = stsTokenManagerElement.GetProperty("accessToken").GetString(),
-                ExpirationTime = stsTokenManagerElement.GetProperty("expirationTime").GetString()
+                RefreshToken = stsTokenManagerElement.GetProperty("refreshToken").GetString() ?? throw new InvalidOperationException("RefreshToken is null."),
+                AccessToken = stsTokenManagerElement.GetProperty("accessToken").GetString() ?? throw new InvalidOperationException("AccessToken is null."),
+                ExpirationTime = stsTokenManagerElement.GetProperty("expirationTime").GetString() ?? throw new InvalidOperationException("ExpirationTime is null.")
             };
 
             var firebaseUser = new FirebaseUser
             {
-                Uid = user["uid"]?.ToString(),
-                DisplayName = user["displayName"]?.ToString(),
-                PhotoURL = user["photoURL"]?.ToString(),
-                Email = user["email"]?.ToString(),
+                Uid = user["uid"]?.ToString() ?? throw new InvalidOperationException("Uid is null."),
+                DisplayName = user["displayName"]?.ToString() ?? string.Empty,
+                PhotoURL = user["photoURL"]?.ToString() ?? string.Empty,
+                Email = user["email"]?.ToString() ?? throw new InvalidOperationException("Email is null."),
                 EmailVerified = bool.Parse(user["emailVerified"]?.ToString() ?? "false"),
-                PhoneNumber = user["phoneNumber"]?.ToString(),
+                PhoneNumber = user["phoneNumber"]?.ToString() ?? string.Empty,
                 IsAnonymous = bool.Parse(user["isAnonymous"]?.ToString() ?? "false"),
-                TenantId = user["tenantId"]?.ToString(),
+                TenantId = user["tenantId"]?.ToString() ?? string.Empty,
                 StsTokenManager = stsTokenManager,
-                LastLoginAt = user["lastLoginAt"]?.ToString(),
-                CreatedAt = user["createdAt"]?.ToString()
+                LastLoginAt = user["lastLoginAt"]?.ToString() ?? string.Empty,
+                CreatedAt = user["createdAt"]?.ToString() ?? string.Empty
             };
-
-            // Log the values of the required fields
-            Console.WriteLine($"Email: {firebaseUser.Email}");
-            Console.WriteLine($"StsTokenManager: {firebaseUser.StsTokenManager}");
-            Console.WriteLine($"AccessToken: {firebaseUser.StsTokenManager?.AccessToken}");
 
             // Ensure required fields are not null
             if (string.IsNullOrEmpty(firebaseUser.Email) || firebaseUser.StsTokenManager == null || string.IsNullOrEmpty(firebaseUser.StsTokenManager.AccessToken))
@@ -77,8 +72,6 @@ namespace ASG.Services
             return firebaseUser;
         }
 
-
-
         public async Task SignOutAsync()
         {
             await _jsRuntime.InvokeVoidAsync("firebaseAuth.signOut");
@@ -88,7 +81,12 @@ namespace ASG.Services
 
         public async Task<Dictionary<string, string>> GetUserFromLocalStorageAsync()
         {
-            return await _localStorage.GetItemAsync<Dictionary<string, string>>("ASGUser");
+            var user = await _localStorage.GetItemAsync<Dictionary<string, string>>("ASGUser");
+            if (user == null)
+            {
+                throw new InvalidOperationException("No user found in local storage.");
+            }
+            return user;
         }
     }
 }

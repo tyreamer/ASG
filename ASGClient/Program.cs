@@ -14,6 +14,7 @@ builder.Services.AddScoped<TokenManagerService>();
 builder.Services.AddScoped<TokenValidationService>();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthenticationStateProvider, ASGAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationService>();
 builder.Services.AddMudServices();
 builder.Services.AddAuthorizationCore();
 

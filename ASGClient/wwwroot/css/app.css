@@ -146,3 +146,31 @@ body {
 .google-sign-in-button:hover {
     background-color: #357ae8;
 }
+
+.bg-primary {
+    background-color: #007bff;
+}
+
+.bg-primary-dark {
+    background-color: #0056b3;
+}
+
+.bg-secondary {
+    background-color: #6c757d;
+}
+
+.bg-light {
+    background-color: #f8f9fa;
+}
+
+.text-primary {
+    color: #007bff;
+}
+
+.text-dark {
+    color: #343a40;
+}
+
+.text-muted {
+    color: #6c757d;
+}

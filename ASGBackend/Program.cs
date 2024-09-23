@@ -1,4 +1,4 @@
-using ASGBackend.Hubs;
+using ASGBackend.Agents;
 using ASGBackend.Services;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
@@ -24,7 +24,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<FirebaseService>();
-builder.Services.AddSignalR();
+builder.Services.AddHttpClient<OpenAIService>();
+builder.Services.AddSingleton<UserClusteringAgent>();
 
 // Configure the URLs and ports based on the environment
 if (builder.Environment.IsDevelopment())
@@ -64,6 +65,5 @@ else
 app.UseAuthorization();
 app.UseCors("AllowAll");
 app.MapControllers();
-app.MapHub<ASGHub>("/ASGhub");
 
 app.Run();

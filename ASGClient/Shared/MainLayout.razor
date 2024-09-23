@@ -30,44 +30,47 @@
                 </AuthorizeView>
             </MudAppBar>
         </MudLayout>
-</CascadingAuthenticationState>
+    </CascadingAuthenticationState>
 
     @code {
     private bool _isDarkMode;
     private MudThemeProvider? _mudThemeProvider;
-    private bool _loginDialogShown = false;
-    [CascadingParameter] private Task<AuthenticationState> AuthStateTask { get; set; }
+    [CascadingParameter] private Task<AuthenticationState> AuthStateTask { get; set; } = default!;
 
     private MudTheme ASGTheme = new MudTheme()
-    {
-        PaletteLight = new PaletteLight()
         {
-            Primary = "#4997f3",
-            Secondary = "#fb912a",
-            Background = "#45234e",
-            AppbarBackground = "#9e87de",
-            DrawerBackground = "#9e87de",
-            DrawerText = Colors.Shades.White,
-            DrawerIcon = Colors.Shades.White
-        },
-        PaletteDark = new PaletteDark()
-        {
-            Primary = "#4997f3",
-            Secondary = "#fb912a",
-            Background = "#45234e",
-            AppbarBackground = "#9e87de",
-            DrawerBackground = "#9e87de",
-            DrawerText = Colors.Shades.White,
-            DrawerIcon = Colors.Shades.White
-        }
-    };
+            PaletteLight = new PaletteLight()
+            {
+                Primary = "#3490dc", // Updated primary color
+                Secondary = "#ffed4a", // Updated secondary color
+                Background = "#f8fafc", // Updated background color
+                AppbarBackground = "#ffffff", // Updated appbar background color
+                DrawerBackground = "#ffffff", // Updated drawer background color
+                DrawerText = Colors.Shades.Black, // Updated drawer text color
+                DrawerIcon = Colors.Shades.Black // Updated drawer icon color
+            },
+            PaletteDark = new PaletteDark()
+            {
+                Primary = "#3490dc", // Updated primary color
+                Secondary = "#ffed4a", // Updated secondary color
+                Background = "#2d3748", // Updated background color
+                AppbarBackground = "#1a202c", // Updated appbar background color
+                DrawerBackground = "#1a202c", // Updated drawer background color
+                DrawerText = Colors.Shades.White, // Updated drawer text color
+                DrawerIcon = Colors.Shades.White // Updated drawer icon color
+            }
+        };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _isDarkMode = await _mudThemeProvider?.GetSystemPreference();
-            await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+            if (_mudThemeProvider != null)
+            {
+                _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+                await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+            }
+
             await CheckAuthenticationState();
             StateHasChanged();
         }
@@ -78,7 +81,7 @@
         var authState = await AuthStateTask;
         var user = authState.User;
 
-        if (!user.Identity.IsAuthenticated && !IsExcludedFromAuth())
+        if (user != null && !user.Identity?.IsAuthenticated == true && !IsExcludedFromAuth())
         {
             Console.WriteLine("User is not authenticated, redirecting to home.");
             Navigation.NavigateTo("/");

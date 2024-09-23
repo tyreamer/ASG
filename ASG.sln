@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASGClient", "ASGClient\ASGC
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASGBackend", "ASGBackend\ASGBackend.csproj", "{B897D576-6C07-41EC-ACD8-9B7647420517}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASGShared", "ASGShared\ASGShared.csproj", "{C69C83B4-8A78-4A02-A94F-16A3137A5E0B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{B897D576-6C07-41EC-ACD8-9B7647420517}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B897D576-6C07-41EC-ACD8-9B7647420517}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B897D576-6C07-41EC-ACD8-9B7647420517}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C69C83B4-8A78-4A02-A94F-16A3137A5E0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C69C83B4-8A78-4A02-A94F-16A3137A5E0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C69C83B4-8A78-4A02-A94F-16A3137A5E0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C69C83B4-8A78-4A02-A94F-16A3137A5E0B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

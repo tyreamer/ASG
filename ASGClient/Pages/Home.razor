@@ -5,68 +5,137 @@
 @using ASG.Services
 @using Microsoft.AspNetCore.Components
 @inject IJSRuntime JsRuntime
-@inject FirebaseService FirebaseService
+@inject AuthenticationService AuthService
 @inject NavigationManager Navigation
+@using MudBlazor
 
-<MudGrid JustifyContent="Center" AlignItems="Center" Style="height: 100vh;">
-    <MudItem JustifyContent="Center" AlignItems="Center">
-        <AuthorizeView>
-            <Authorized>
-                <MudPaper Class="pa-4">
-                    <MudText Typo="Typo.h4">Anything sounds good.</MudText>
-                    <MudDivider Class="mb-4" />
-                </MudPaper>
-            </Authorized>
-            <NotAuthorized>
-                <MudPaper Class="pa-4">
-                    <MudImage Src="images/logo.png" Fluid="true" />
-                    <MudDivider Class="mb-4" />
-                    <MudStack AlignItems="AlignItems.Center" JustifyContent="Center" Spacing="2">
-                        <MudButton Class="google-sign-in-button" OnClick="SignInWithGoogle">
-                            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo" />
-                            Sign in with Google
-                        </MudButton>
-                    </MudStack>
-                </MudPaper>
-            </NotAuthorized>
-        </AuthorizeView>
-    </MudItem>
-</MudGrid>
+<MudContainer Class="min-h-screen bg-gray-50">
+    <MudAppBar Elevation="0" Color="Color.Transparent">
+        <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <MudText Typo="Typo.h4" Class="text-white">Anything sounds good.</MudText>
+            <!--TODO Add avatar 
+                <MudAvatar Class="bg-secondary">
+                <MudText Typo="Typo.body1" Class="text-white">let's keep it simple.</MudText>
+            </MudAvatar>
+            -->
+        </MudContainer>
+    </MudAppBar>
+
+    <MudContainer Class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <MudContainer Class="px-4 py-6 sm:px-0">
+            <MudContainer Class="flex justify-between items-center mb-6">
+                <MudText Typo="Typo.h4">This Week's Plan</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="RegeneratePlan">
+                    <MudIcon Icon="refresh" Class="mr-2" />
+                    Regenerate Plan
+                </MudButton>
+            </MudContainer>
+
+            <MudGrid Class="max-w-7xl">
+                @foreach (var day in weeklyPlan)
+                {
+                   <MudItem xs="12">
+                        <MudPaper Class="p-4 mb-4">
+                            <MudGrid>
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.h6">@day.Day</MudText>
+                                        <MudText Typo="Typo.body1" Class="mt-1">@day.Recipe</MudText>
+                                    </MudItem>
+                                    <MudItem xs="6" Class="text-right">
+                                        <MudText Typo="Typo.caption" Class="text-gray-500">@day.Calories cal | @day.PrepTime</MudText>
+                                    </MudItem>
+                                </MudGrid>
+                                <MudContainer Class="mt-4 flex justify-between items-center">
+                                    <MudContainer Class="flex space-x-2">
+                                        <MudIconButton Icon="thumb_up" Color="Color.Primary" OnClick="() => LikeRecipe(day)" />
+                                        <MudIconButton Icon="thumb_down" Color="Color.Primary" OnClick="() => DislikeRecipe(day)" />
+                                    </MudContainer>
+                                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ViewRecipe(day)">
+                                        View Recipe
+                                        <MudIcon Icon="arrow_forward" Class="ml-1" />
+                                    </MudButton>
+                                </MudContainer>
+                            </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+
+            <MudContainer Class="mt-8 flex justify-center space-x-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ViewGroceryList">
+                    <MudIcon Icon="shopping_cart" Class="mr-2" />
+                    View Grocery List
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AdjustMealPlan">
+                    <MudIcon Icon="calendar_today" Class="mr-2" />
+                    Adjust Meal Plan
+                </MudButton>
+            </MudContainer>
+        </MudContainer>
+    </MudContainer>
+</MudContainer>
 
 @code {
-    [CascadingParameter] private Task<AuthenticationState> AuthStateTask { get; set; }
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
 
     private async Task SignInWithGoogle()
     {
-        var firebaseUser = await FirebaseService.SignInWithGoogleAsync();
-        if (firebaseUser != null)
-        {
-            if (AuthStateProvider is ASGAuthenticationStateProvider customAuthStateProvider)
-            {
-                await customAuthStateProvider.MarkUserAsAuthenticated(firebaseUser);
-            }
-        }
-    }
-
-    private async Task CheckAuthenticationState()
-    {
-        var authState = await AuthStateTask;
-        var user = authState.User;
-
-        if (user.Identity.IsAuthenticated)
-        {
-            var userName = user.FindFirst(ClaimTypes.Name)?.Value;
-            Console.WriteLine($"User is authenticated: {userName}");
-        }
-        else
-        {
-            // User is not authenticated
-            Console.WriteLine("User is not authenticated");
-        }
+        await AuthService.SignInWithGoogleAsync();
     }
 
     protected override async Task OnInitializedAsync()
     {
-        await CheckAuthenticationState();
+        if (AuthStateTask != null)
+        {
+            await AuthenticationService.CheckAuthenticationStateAsync(AuthStateTask);
+        }
+    }
+
+    private List<DayPlan> weeklyPlan = new List<DayPlan>
+    {
+        new DayPlan { Day = "Monday", Recipe = "Vegetarian Lasagna", Calories = 450, PrepTime = "45 min" },
+        new DayPlan { Day = "Tuesday", Recipe = "Grilled Salmon with Asparagus", Calories = 380, PrepTime = "30 min" },
+        new DayPlan { Day = "Wednesday", Recipe = "Chicken Stir Fry", Calories = 420, PrepTime = "25 min" },
+        new DayPlan { Day = "Thursday", Recipe = "Quinoa Salad with Roasted Vegetables", Calories = 350, PrepTime = "20 min" },
+        new DayPlan { Day = "Friday", Recipe = "Homemade Pizza", Calories = 500, PrepTime = "40 min" },
+        new DayPlan { Day = "Saturday", Recipe = "Beef Tacos", Calories = 460, PrepTime = "35 min" },
+        new DayPlan { Day = "Sunday", Recipe = "Lentil Soup", Calories = 300, PrepTime = "50 min" },
+    };
+
+    private void RegeneratePlan()
+    {
+        // Implement plan regeneration logic
+    }
+
+    private void LikeRecipe(DayPlan day)
+    {
+        // Implement like logic
+    }
+
+    private void DislikeRecipe(DayPlan day)
+    {
+        // Implement dislike logic
+    }
+
+    private void ViewRecipe(DayPlan day)
+    {
+        // Navigate to recipe detail page
+    }
+
+    private void ViewGroceryList()
+    {
+        Navigation.NavigateTo("/grocery-list");
+    }
+
+    private void AdjustMealPlan()
+    {
+        Navigation.NavigateTo("/adjust-plan");
+    }
+
+    private class DayPlan
+    {
+        public string Day { get; set; }
+        public string Recipe { get; set; }
+        public int Calories { get; set; }
+        public string PrepTime { get; set; }
     }
 }
