@@ -24,6 +24,7 @@ builder.Services.AddHttpClient("ASGClient", client =>
 });
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("ASGClient"));
 builder.Services.AddScoped<MealPlanClientService>();
+builder.Services.AddScoped<UserClientService>();
 builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

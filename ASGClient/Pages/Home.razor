@@ -14,108 +14,121 @@
     <MudAppBar Elevation="0" Color="Color.Transparent">
         <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <MudText Typo="Typo.h4" Class="text-white">Anything sounds good.</MudText>
+            @if (isAuthenticated)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="Logout">
+                    Logout
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SignInWithGoogle">
+                    Sign In with Google
+                </MudButton>
+            }
         </MudContainer>
     </MudAppBar>
 
-    <MudContainer Class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <MudContainer Class="px-4 py-6 sm:px-0">
-            <MudContainer Class="flex justify-between items-center mb-6">
-                <MudText Typo="Typo.h4">This Week's Plan</MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="RegeneratePlan">
-                    <MudIcon Icon="refresh" Class="mr-2" />
-                    Regenerate Plan
-                </MudButton>
-            </MudContainer>
+    @if (isAuthenticated)
+    {
+        <MudContainer Class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <MudContainer Class="px-4 py-6 sm:px-0">
+                <MudContainer Class="flex justify-between items-center mb-6">
+                    <MudText Typo="Typo.h4">This Week's Plan</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="RegeneratePlan">
+                        <MudIcon Icon="refresh" Class="mr-2" />
+                        Regenerate Plan
+                    </MudButton>
+                </MudContainer>
 
-            <MudGrid Class="max-w-7xl">
-                @foreach (var recipe in weeklyPlan)
-                {
-                    <MudItem xs="12">
-                        <MudPaper Class="p-4 mb-4">
-                            <MudGrid>
-                                <MudItem xs="6">
-                                    <MudText Typo="Typo.h6">@recipe.Name</MudText>
-                                        <MudText Typo="Typo.body1" Class="mt-1">@recipe.Ingredients</MudText>
-                                    </MudItem>
-                                    <MudItem xs="6" Class="text-right">
-                                        <MudText Typo="Typo.caption" Class="text-gray-500">@recipe.Calories cal | @recipe.PrepTime</MudText>
-                                    </MudItem>
-                                </MudGrid>
-                                <MudContainer Class="mt-4 flex justify-between items-center">
-                                    <MudContainer Class="flex space-x-2">
-                                        <MudIconButton Icon="thumb_up" Color="Color.Primary" OnClick="() => LikeRecipe(recipe)" />
-                                        <MudIconButton Icon="thumb_down" Color="Color.Primary" OnClick="() => DislikeRecipe(recipe)" />
+                <MudGrid Class="max-w-7xl">
+                    @foreach (var recipe in weeklyPlan)
+                    {
+                        <MudItem xs="12">
+                            <MudPaper Class="p-4 mb-4">
+                                <MudGrid>
+                                    <MudItem xs="6">
+                                        <MudText Typo="Typo.h6">@recipe.Name</MudText>
+                                            <MudText Typo="Typo.body1" Class="mt-1">@recipe.Ingredients</MudText>
+                                        </MudItem>
+                                        <MudItem xs="6" Class="text-right">
+                                            <MudText Typo="Typo.caption" Class="text-gray-500">@recipe.Calories cal | @recipe.PrepTime</MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                    <MudContainer Class="mt-4 flex justify-between items-center">
+                                        <MudContainer Class="flex space-x-2">
+                                            <MudIconButton Icon="thumb_up" Color="Color.Primary" OnClick="() => LikeRecipe(recipe)" />
+                                            <MudIconButton Icon="thumb_down" Color="Color.Primary" OnClick="() => DislikeRecipe(recipe)" />
+                                        </MudContainer>
+                                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ViewRecipe(recipe)">
+                                            View Recipe
+                                            <MudIcon Icon="arrow_forward" Class="ml-1" />
+                                        </MudButton>
                                     </MudContainer>
-                                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ViewRecipe(recipe)">
-                                        View Recipe
-                                        <MudIcon Icon="arrow_forward" Class="ml-1" />
-                                    </MudButton>
-                                </MudContainer>
-                            </MudPaper>
-                        </MudItem>
-                }
-            </MudGrid>
+                                </MudPaper>
+                            </MudItem>
+                    }
+                </MudGrid>
 
-            <MudContainer Class="mt-8 flex justify-center space-x-4">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ViewGroceryList">
-                    <MudIcon Icon="shopping_cart" Class="mr-2" />
-                    View Grocery List
-                </MudButton>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AdjustMealPlan">
-                    <MudIcon Icon="calendar_today" Class="mr-2" />
-                    Adjust Meal Plan
-                </MudButton>
+                <MudContainer Class="mt-8 flex justify-center space-x-4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ViewGroceryList">
+                        <MudIcon Icon="shopping_cart" Class="mr-2" />
+                        View Grocery List
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AdjustMealPlan">
+                        <MudIcon Icon="calendar_today" Class="mr-2" />
+                        Adjust Meal Plan
+                    </MudButton>
+                </MudContainer>
             </MudContainer>
         </MudContainer>
-    </MudContainer>
+    }
 </MudContainer>
 
 @code {
     [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private bool isAuthenticated;
+    private List<Recipe> weeklyPlan = new List<Recipe>();
 
     private async Task SignInWithGoogle()
     {
         var user = await AuthService.SignInWithGoogleAsync();
         if (user != null)
         {
-            Navigation.NavigateTo($"/signup?name={Uri.EscapeDataString(user.DisplayName)}&email={Uri.EscapeDataString(user.Email)}");
+            var isRegistered = await AuthService.IsUserRegisteredAsync(user.Email);
+            if (!isRegistered)
+            {
+                Navigation.NavigateTo($"/signup?name={Uri.EscapeDataString(user.DisplayName)}&email={Uri.EscapeDataString(user.Email)}");
+            }
         }
     }
 
     protected override async Task OnInitializedAsync()
     {
-        if (AuthStateTask != null)
-        {
-            await AuthenticationService.CheckAuthenticationStateAsync(AuthStateTask);
-        }
+        await AuthService.HandleAuthenticationAsync(AuthStateTask);
+        var authState = await AuthService.GetAuthenticationStateAsync();
+        isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
 
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var userClaims = authState.User;
-
-        if (userClaims.Identity != null && userClaims.Identity.IsAuthenticated)
+        if (isAuthenticated)
         {
-            var email = userClaims.FindFirst(c => c.Type == ClaimTypes.Email)?.Value;
-            var response = await Http.GetAsync($"api/mealplanner/user/{email}");
-            if (!response.IsSuccessStatusCode)
+            var email = authState.User.FindFirst(c => c.Type == ClaimTypes.Email)?.Value;
+            if (email != null)
             {
-                Navigation.NavigateTo("/signup");
-                return;
+                weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(email);
             }
         }
-        else
-        {
-            Navigation.NavigateTo("/signin");
-        }
-
-        weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync();
     }
-
-    private List<Recipe> weeklyPlan = new List<Recipe>();
 
     private async Task RegeneratePlan()
     {
         await MealPlanClientService.RegeneratePlanAsync();
-        weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync();
+        var authState = await AuthService.GetAuthenticationStateAsync();
+        var email = authState.User.FindFirst(c => c.Type == ClaimTypes.Email)?.Value;
+        if (email != null)
+        {
+            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(email);
+        }
     }
 
     private async Task LikeRecipe(Recipe recipe)
@@ -141,5 +154,10 @@
     private void AdjustMealPlan()
     {
         Navigation.NavigateTo("/adjust-plan");
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
     }
 }

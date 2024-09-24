@@ -52,7 +52,7 @@
         try
         {
             Console.WriteLine("Form is valid and submitted.");
-            var response = await HttpClient.PostAsJsonAsync("api/mealplanner/user", user);
+            var response = await HttpClient.PostAsJsonAsync("api/users", user);
             if (response.IsSuccessStatusCode)
             {
                 Navigation.NavigateTo("/");

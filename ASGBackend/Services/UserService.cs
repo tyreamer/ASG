@@ -38,10 +38,16 @@ namespace ASGBackend.Services
         {
             try
             {
-                return await _context.Users
+                _logger.LogInformation($"Fetching user with email: {email}");
+                var user = await _context.Users
                     .Include(u => u.DietaryRestrictionsUsers)
                     .ThenInclude(dru => dru.DietaryRestrictions)
                     .FirstOrDefaultAsync(u => u.Email == email);
+                if (user == null)
+                {
+                    _logger.LogWarning($"User with email {email} not found");
+                }
+                return user;
             }
             catch (Exception ex)
             {
@@ -91,6 +97,39 @@ namespace ASGBackend.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting user");
+                throw;
+            }
+        }
+
+        public async Task<bool> ValidateFullyRegistered(string id)
+        {
+            try
+            {
+                _logger.LogInformation($"Validating if user with id: {id} is fully registered");
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+                if (user == null)
+                {
+                    _logger.LogWarning($"User with id {id} not found");
+                    return false;
+                }
+
+                // Check if all required fields are filled out
+                if (string.IsNullOrWhiteSpace(user.Name) ||
+                    string.IsNullOrWhiteSpace(user.Email) ||
+                    string.IsNullOrWhiteSpace(user.DisplayName) ||
+                    user.HouseholdSize <= 0 ||
+                    user.CookingSkillLevel < 1 || user.CookingSkillLevel > 10)
+                {
+                    _logger.LogWarning($"User with id {id} is not fully registered");
+                    return false;
+                }
+
+                _logger.LogInformation($"User with id {id} is fully registered");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating if user is fully registered");
                 throw;
             }
         }
