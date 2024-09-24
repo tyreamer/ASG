@@ -1,6 +1,7 @@
-using System.Net.Http.Json;
-using System.Text.Json;
 using ASGShared.Models;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace ASG.Services
 {
@@ -13,69 +14,29 @@ namespace ASG.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<Recipe>> GetWeeklyPlanAsync()
+        public async Task<List<Recipe>> GetWeeklyPlanAsync(string email)
         {
-            try
-            {
-                var response = await _httpClient.GetAsync("api/mealplanner/weekly");
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadFromJsonAsync<List<Recipe>>();
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine($"Request error: {e.Message}");
-                return new List<Recipe>();
-            }
-            catch (NotSupportedException e)
-            {
-                Console.WriteLine($"The content type is not supported: {e.Message}");
-                return new List<Recipe>();
-            }
-            catch (JsonException e)
-            {
-                Console.WriteLine($"Invalid JSON: {e.Message}");
-                return new List<Recipe>();
-            }
+            var response = await _httpClient.GetAsync($"api/mealplanner/weekly?email={email}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<Recipe>>() ?? [];
         }
 
         public async Task RegeneratePlanAsync()
         {
-            try
-            {
-                var response = await _httpClient.PostAsync("api/mealplanner/regenerate", null);
-                response.EnsureSuccessStatusCode();
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine($"Request error: {e.Message}");
-            }
+            var response = await _httpClient.PostAsync("api/mealplanner/regenerate", null);
+            response.EnsureSuccessStatusCode();
         }
 
         public async Task LikeRecipeAsync(Recipe recipe)
         {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync("api/mealplanner/like", recipe);
-                response.EnsureSuccessStatusCode();
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine($"Request error: {e.Message}");
-            }
+            var response = await _httpClient.PostAsJsonAsync("api/mealplanner/like", recipe);
+            response.EnsureSuccessStatusCode();
         }
 
         public async Task DislikeRecipeAsync(Recipe recipe)
         {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync("api/mealplanner/dislike", recipe);
-                response.EnsureSuccessStatusCode();
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine($"Request error: {e.Message}");
-            }
+            var response = await _httpClient.PostAsJsonAsync("api/mealplanner/dislike", recipe);
+            response.EnsureSuccessStatusCode();
         }
     }
 }
-

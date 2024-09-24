@@ -1,12 +1,19 @@
 using ASG.Services;
 using ASGBackend.Agents;
+using ASGBackend.Data;
 using ASGBackend.Interfaces;
 using ASGBackend.Repositories;
 using ASGBackend.Services;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 // Get the path to the Firebase Admin SDK JSON file from the environment variable
 var firebaseCredentialPath = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
@@ -30,8 +37,16 @@ builder.Services.AddSingleton<FirebaseService>();
 builder.Services.AddHttpClient<OpenAIService>();
 builder.Services.AddSingleton<UserClusteringAgent>();
 builder.Services.AddScoped<MealPlanService>();
+builder.Services.AddScoped<UserService>();
+
+//repositories
 builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Database
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") + ";TrustServerCertificate=True"));
+//TODO: update with cert
 
 // Register AIAgentService with dependencies
 builder.Services.AddHttpClient();

@@ -12,10 +12,11 @@ namespace ASG.Services
             _logger = logger;
         }
 
-        public List<Recipe> GetWeeklyPlan()
+        public List<Recipe> GetWeeklyPlan(string email)
         {
             try
             {
+                // Implement logic to get the weekly plan based on the user's email
                 return new List<Recipe>
                 {
                     new Recipe { Name = "Vegetarian Lasagna", Calories = 450, PrepTime = "45 min", CuisineType = "Italian", Ingredients = "Ingredients for Vegetarian Lasagna", Instructions = "Instructions for Vegetarian Lasagna" },
@@ -33,6 +34,7 @@ namespace ASG.Services
                 throw;
             }
         }
+
 
         public void RegeneratePlan()
         {

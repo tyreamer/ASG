@@ -2,7 +2,7 @@
 {
     public class Budget
     {
-        public decimal Amount { get; set; } = 0.0m;
+        public decimal Amount { get; set; } = 0;
         public string Currency { get; set; } = "USD"; // Default to USD
 
         public Budget() { }

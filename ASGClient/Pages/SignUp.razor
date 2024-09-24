@@ -1,0 +1,94 @@
+﻿@page "/signup"
+@using ASGShared.Models
+@using ASG.Services
+@using FluentValidation
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationService AuthService
+@inject HttpClient HttpClient
+@using MudBlazor
+
+<MudContainer Class="min-h-screen bg-gray-50">
+    <MudContainer Class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <MudContainer Class="px-4 py-6 sm:px-0">
+            <MudText Typo="Typo.h4">Sign Up</MudText>
+            <MudForm Model="@user" @ref="form" Validation="@(userValidator.ValidateValue)" ValidationDelay="0">
+                <MudTextField @bind-Value="user.Name" For="@(() => user.Name)" Label="Name" Immediate="true" />
+                <MudTextField @bind-Value="user.Email" For="@(() => user.Email)" Label="Email" Immediate="true" Disabled="true" />
+                <MudTextField @bind-Value="user.DisplayName" For="@(() => user.DisplayName)" Label="Display Name" Immediate="true" />
+                <MudTextField @bind-Value="user.HouseholdSize" For="@(() => user.HouseholdSize)" Label="Household Size" Immediate="true" />
+                <MudContainer Class="my-4">
+                    <MudText Typo="Typo.subtitle1">Cooking Skill Level: @user.CookingSkillLevel</MudText>
+                        <MudSlider @bind-Value="user.CookingSkillLevel" Min="1" Max="10" Step="1" Style="width: 100%;" />
+                    </MudContainer>
+                    <MudButton Type="Submit" Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleButtonClick">Sign Up</MudButton>
+                </MudForm>
+                <MudText Typo="Typo.subtitle2" Color="Color.Error">@errorMessage</MudText>
+            </MudContainer>
+        </MudContainer>
+    </MudContainer>
+
+    @code {
+    private MudForm form;
+    private User user = new User();
+    private string errorMessage;
+    private UserValidator userValidator = new UserValidator();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var email = await AuthService.GetAuthenticatedUserEmailAsync();
+        if (email != null)
+        {
+            user.Email = email;
+        }
+        else
+        {
+            Navigation.NavigateTo("/signin");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            Console.WriteLine("Form is valid and submitted.");
+            var response = await HttpClient.PostAsJsonAsync("api/users", user);
+            if (response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = "Error: " + response.ReasonPhrase;
+                Console.WriteLine(errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Exception: " + ex.Message;
+            Console.WriteLine(errorMessage);
+        }
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        errorMessage = "Form is invalid. Please check the input fields.";
+        Console.WriteLine(errorMessage);
+    }
+
+    private async Task HandleButtonClick()
+    {
+        Console.WriteLine("Button clicked.");
+        await form.Validate();
+        if (form.IsValid)
+        {
+            Console.WriteLine("Form is valid.");
+            await HandleValidSubmit();
+        }
+        else
+        {
+            Console.WriteLine("Form is invalid.");
+            HandleInvalidSubmit();
+        }
+    }
+}

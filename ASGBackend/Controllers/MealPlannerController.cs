@@ -3,7 +3,6 @@ using ASGBackend.Interfaces;
 using ASGBackend.Services;
 using ASGShared.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ASGBackend.Controllers
 {
@@ -13,25 +12,27 @@ namespace ASGBackend.Controllers
     {
         private readonly AIAgentService _aiAgentService;
         private readonly IRecipeRepository _recipeRepository;
-        private readonly IUserRepository _userRepository;
         private readonly MealPlanService _mealPlanService;
         private readonly ILogger<MealPlannerController> _logger;
 
-        public MealPlannerController(AIAgentService aiAgentService, IRecipeRepository recipeRepository, IUserRepository userRepository, MealPlanService mealPlanService, ILogger<MealPlannerController> logger)
+        public MealPlannerController(
+            AIAgentService aiAgentService,
+            IRecipeRepository recipeRepository,
+            MealPlanService mealPlanService,
+            ILogger<MealPlannerController> logger)
         {
             _aiAgentService = aiAgentService;
             _recipeRepository = recipeRepository;
-            _userRepository = userRepository;
             _mealPlanService = mealPlanService;
             _logger = logger;
         }
 
         [HttpGet("weekly")]
-        public ActionResult<List<Recipe>> GetWeeklyPlan()
+        public ActionResult<List<Recipe>> GetWeeklyPlan([FromQuery] string email)
         {
             try
             {
-                var weeklyPlan = _mealPlanService.GetWeeklyPlan();
+                var weeklyPlan = _mealPlanService.GetWeeklyPlan(email);
                 return Ok(weeklyPlan);
             }
             catch (Exception ex)

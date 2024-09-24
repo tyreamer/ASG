@@ -3,6 +3,7 @@ using Blazored.LocalStorage;
 using ASG.Models;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
+using ASGShared.Models;
 
 namespace ASG.Services
 {
@@ -53,32 +54,35 @@ namespace ASG.Services
             }
         }
 
-        public async Task MarkUserAsAuthenticated(FirebaseUser user)
+        public async Task<User> MarkUserAsAuthenticated(FirebaseUser firebaseUser)
         {
-            if (user == null)
+            if (firebaseUser == null)
             {
-                throw new ArgumentNullException(nameof(user));
+                throw new ArgumentNullException(nameof(firebaseUser));
             }
 
-            if (string.IsNullOrEmpty(user.Email))
+            if (string.IsNullOrEmpty(firebaseUser.Email))
             {
-                throw new ArgumentNullException(nameof(user.Email));
+                throw new ArgumentNullException(nameof(firebaseUser.Email));
             }
 
             // Store the user in local storage
-            await _localStorage.SetItemAsync("ASGUser", user);
+            await _localStorage.SetItemAsync("ASGUser", firebaseUser);
 
             var claims = new List<Claim>
             {
-                new (ClaimTypes.Name, user.DisplayName),
-                new (ClaimTypes.Email, user.Email),
-                new ("Token", user.StsTokenManager.AccessToken)
+                new (ClaimTypes.Name, firebaseUser.DisplayName),
+                new (ClaimTypes.Email, firebaseUser.Email),
+                new ("Token", firebaseUser.StsTokenManager.AccessToken)
             };
 
             var identity = new ClaimsIdentity(claims, "firebaseAuth");
             var userPrincipal = new ClaimsPrincipal(identity);
 
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(userPrincipal)));
+
+            // Convert FirebaseUser to User and return
+            return ConvertFirebaseUserToUser(firebaseUser);
         }
 
         public async Task MarkUserAsLoggedOut()
@@ -87,6 +91,23 @@ namespace ASG.Services
             var identity = new ClaimsIdentity();
             var claimsPrincipal = new ClaimsPrincipal(identity);
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(claimsPrincipal)));
+        }
+
+        private User ConvertFirebaseUserToUser(FirebaseUser firebaseUser)
+        {
+            return new User
+            {
+                Id = firebaseUser.Uid,
+                DisplayName = firebaseUser.DisplayName,
+                Email = firebaseUser.Email,
+                IsAuthenticated = true,
+                Claims = new Dictionary<string, string>
+                {
+                    { ClaimTypes.Name, firebaseUser.DisplayName },
+                    { ClaimTypes.Email, firebaseUser.Email },
+                    { "Token", firebaseUser.StsTokenManager.AccessToken }
+                }
+            };
         }
     }
 }

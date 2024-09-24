@@ -1,22 +1,42 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
-using ASG.Services;
+using ASGShared.Models;
+using Microsoft.AspNetCore.Components;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace ASG.Services
 {
-    public class AuthenticationService(FirebaseService firebaseService, AuthenticationStateProvider authStateProvider)
+    public class AuthenticationService
     {
-        private readonly FirebaseService _firebaseService = firebaseService;
-        private readonly ASGAuthenticationStateProvider _authStateProvider = authStateProvider as ASGAuthenticationStateProvider
-                                 ?? throw new ArgumentException("Invalid AuthenticationStateProvider");
+        private readonly FirebaseService _firebaseService;
+        private readonly ASGAuthenticationStateProvider _authStateProvider;
+        private readonly NavigationManager _navigation;
+        private readonly UserClientService _userClientService;
 
-        public async Task SignInWithGoogleAsync()
+        public AuthenticationService(FirebaseService firebaseService, AuthenticationStateProvider authStateProvider, NavigationManager navigation, UserClientService userClientService)
+        {
+            _firebaseService = firebaseService;
+            _authStateProvider = authStateProvider as ASGAuthenticationStateProvider
+                                 ?? throw new ArgumentException("Invalid AuthenticationStateProvider");
+            _navigation = navigation;
+            _userClientService = userClientService;
+        }
+
+        public async Task<User?> SignInWithGoogleAsync()
         {
             var firebaseUser = await _firebaseService.SignInWithGoogleAsync();
             if (firebaseUser != null)
             {
-                await _authStateProvider.MarkUserAsAuthenticated(firebaseUser);
+                return await _authStateProvider.MarkUserAsAuthenticated(firebaseUser);
             }
+
+            return null;
+        }
+
+        public async Task<AuthenticationState> GetAuthenticationStateAsync()
+        {
+            return await _authStateProvider.GetAuthenticationStateAsync();
         }
 
         public static async Task CheckAuthenticationStateAsync(Task<AuthenticationState> authStateTask)
@@ -33,6 +53,56 @@ namespace ASG.Services
             {
                 Console.WriteLine("User is not authenticated");
             }
+        }
+
+        public async Task<string?> GetAuthenticatedUserEmailAsync()
+        {
+            var authState = await GetAuthenticationStateAsync();
+            var userClaims = authState.User;
+
+            if (userClaims.Identity != null && userClaims.Identity.IsAuthenticated)
+            {
+                return userClaims.FindFirst(c => c.Type == ClaimTypes.Email)?.Value;
+            }
+
+            return null;
+        }
+
+        public async Task HandleAuthenticationAsync(Task<AuthenticationState> authStateTask)
+        {
+            if (authStateTask != null)
+            {
+                await CheckAuthenticationStateAsync(authStateTask);
+            }
+
+            var authState = await GetAuthenticationStateAsync();
+            var userClaims = authState.User;
+
+            if (userClaims.Identity != null && userClaims.Identity.IsAuthenticated)
+            {
+                var email = userClaims.FindFirst(c => c.Type == ClaimTypes.Email)?.Value;
+                var isRegistered = await _userClientService.IsUserRegisteredAsync(email);
+                if (!isRegistered)
+                {
+                    _navigation.NavigateTo("/signup");
+                    return;
+                }
+            }
+            else
+            {
+                _navigation.NavigateTo("/");
+            }
+        }
+
+        public async Task<bool> IsUserRegisteredAsync(string email)
+        {
+            return await _userClientService.IsUserRegisteredAsync(email);
+        }
+
+        public async Task LogoutAsync()
+        {
+            await _authStateProvider.MarkUserAsLoggedOut();
+            _navigation.NavigateTo("/");
         }
     }
 }

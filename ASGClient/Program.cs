@@ -4,6 +4,7 @@ using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using ASGClient;
 using MudBlazor.Services;
+using System.Net.Http;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -17,7 +18,13 @@ builder.Services.AddScoped<AuthenticationStateProvider, ASGAuthenticationStatePr
 builder.Services.AddScoped<AuthenticationService>();
 builder.Services.AddMudServices();
 builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5050/") });
+builder.Services.AddHttpClient("ASGClient", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5050");
+});
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("ASGClient"));
 builder.Services.AddScoped<MealPlanClientService>();
+builder.Services.AddScoped<UserClientService>();
+builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

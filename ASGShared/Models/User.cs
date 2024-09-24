@@ -1,9 +1,15 @@
-﻿namespace ASGShared.Models
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ASGShared.Models
 {
     public class User
     {
         public bool IsAuthenticated { get; set; }
-        public Dictionary<string, string> Claims { get; set; } = [];
+
+        [NotMapped]
+        public Dictionary<string, string> Claims { get; set; } = new Dictionary<string, string>();
+
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
@@ -11,6 +17,8 @@
         public Budget BudgetPerMeal { get; set; } = new Budget();
         public int HouseholdSize { get; set; } = 1;
         public UserPreferences Preferences { get; set; } = new UserPreferences();
+        public ICollection<DietaryRestrictionsUser> DietaryRestrictionsUsers { get; set; } = new List<DietaryRestrictionsUser>(); // Update collection
+        public ICollection<NutritionalGoals> NutritionalGoals { get; set; } = new List<NutritionalGoals>(); // Update collection
 
         private int _cookingSkillLevel = 1;
         public int CookingSkillLevel

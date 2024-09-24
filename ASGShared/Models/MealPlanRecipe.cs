@@ -4,7 +4,7 @@ namespace ASGShared.Models
 {
     public class MealPlanRecipe
     {
-        public int MealPlanRecipeId { get; set; }
+        public int Id { get; set; }
         public int RecipeId { get; set; }
         public int DayOfWeek { get; set; }
         public string MealType { get; set; }
