@@ -61,7 +61,7 @@ namespace ASGBackend.Services
             {
                 Name = recipe.Name,
                 Ingredients = string.Join(" ", recipe.Ingredients),
-                Instructions = recipe.Instructions
+                Instructions = string.Join(" ", recipe.Instructions)
             };
 
             var prediction = predictionEngine.Predict(input);

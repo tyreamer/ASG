@@ -40,8 +40,6 @@ namespace ASGBackend.Services
             {
                 _logger.LogInformation($"Fetching user with email: {email}");
                 var user = await _context.Users
-                    .Include(u => u.DietaryRestrictionsUsers)
-                    .ThenInclude(dru => dru.DietaryRestrictions)
                     .FirstOrDefaultAsync(u => u.Email == email);
                 if (user == null)
                 {

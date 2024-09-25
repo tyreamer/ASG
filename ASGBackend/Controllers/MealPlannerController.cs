@@ -3,6 +3,10 @@ using ASGBackend.Interfaces;
 using ASGBackend.Services;
 using ASGShared.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ASGBackend.Controllers
 {
@@ -28,11 +32,11 @@ namespace ASGBackend.Controllers
         }
 
         [HttpGet("weekly")]
-        public ActionResult<List<Recipe>> GetWeeklyPlan([FromQuery] string email)
+        public async Task<ActionResult<List<MealPlanRecipe>>> GetWeeklyPlan([FromQuery] string email)
         {
             try
             {
-                var weeklyPlan = _mealPlanService.GetWeeklyPlan(email);
+                var weeklyPlan = await _mealPlanService.GetWeeklyPlan(email);
                 return Ok(weeklyPlan);
             }
             catch (Exception ex)
@@ -43,22 +47,27 @@ namespace ASGBackend.Controllers
         }
 
         [HttpPost("regenerate")]
-        public IActionResult RegeneratePlan()
+        public async Task<IActionResult> RegenerateRecipe([FromBody] RegenerateRecipeRequest request)
         {
+            if (request == null || string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.UserPreferences))
+            {
+                return BadRequest("Invalid request data.");
+            }
+
             try
             {
-                _mealPlanService.RegeneratePlan();
-                return NoContent();
+                var newRecipe = await _mealPlanService.RegenerateRecipe(request.Email, request.UserPreferences, request.DayOfWeek, request.MealType);
+                return Ok(newRecipe);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error regenerating plan");
+                _logger.LogError(ex, "Error regenerating recipe");
                 return StatusCode(500, "Internal server error");
             }
         }
 
         [HttpPost("like")]
-        public IActionResult LikeRecipe([FromBody] Recipe recipe)
+        public IActionResult LikeRecipe([FromBody] MealPlanRecipe recipe)
         {
             try
             {
@@ -73,7 +82,7 @@ namespace ASGBackend.Controllers
         }
 
         [HttpPost("dislike")]
-        public IActionResult DislikeRecipe([FromBody] Recipe recipe)
+        public IActionResult DislikeRecipe([FromBody] MealPlanRecipe recipe)
         {
             try
             {
@@ -86,5 +95,13 @@ namespace ASGBackend.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+    }
+
+    public class RegenerateRecipeRequest
+    {
+        public string Email { get; set; }
+        public string UserPreferences { get; set; }
+        public int DayOfWeek { get; set; }
+        public string MealType { get; set; }
     }
 }

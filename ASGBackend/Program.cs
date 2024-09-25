@@ -8,6 +8,7 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,6 +63,8 @@ builder.Services.AddSingleton(serviceProvider =>
     return new AIAgentService(httpClient, openAIApiKey);
 });
 
+builder.Services.AddControllers();
+
 // Configure the URLs and ports based on the environment
 if (builder.Environment.IsDevelopment())
 {
@@ -85,6 +88,16 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+//TEMP
+// Seed initial data
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    DataSeeder.SeedInitialData(dbContext);
+}
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

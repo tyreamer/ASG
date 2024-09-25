@@ -2,6 +2,7 @@ using ASGShared.Models;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace ASG.Services
 {
@@ -18,7 +19,7 @@ namespace ASG.Services
         {
             var response = await _httpClient.GetAsync($"api/mealplanner/weekly?email={email}");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<Recipe>>() ?? [];
+            return await response.Content.ReadFromJsonAsync<List<Recipe>>() ?? new List<Recipe>();
         }
 
         public async Task RegeneratePlanAsync()

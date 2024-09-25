@@ -17,8 +17,6 @@ namespace ASGShared.Models
         public Budget BudgetPerMeal { get; set; } = new Budget();
         public int HouseholdSize { get; set; } = 1;
         public UserPreferences Preferences { get; set; } = new UserPreferences();
-        public ICollection<DietaryRestrictionsUser> DietaryRestrictionsUsers { get; set; } = new List<DietaryRestrictionsUser>(); // Update collection
-        public ICollection<NutritionalGoals> NutritionalGoals { get; set; } = new List<NutritionalGoals>(); // Update collection
 
         private int _cookingSkillLevel = 1;
         public int CookingSkillLevel

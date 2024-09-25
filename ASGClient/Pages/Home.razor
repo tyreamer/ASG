@@ -8,19 +8,14 @@
 @inject AuthenticationService AuthService
 @inject NavigationManager Navigation
 @inject MealPlanClientService MealPlanClientService
+@inject UserClientService UserClientService
 @using MudBlazor
 
 <MudContainer Class="min-h-screen bg-gray-50">
     <MudAppBar Elevation="0" Color="Color.Transparent">
         <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <MudText Typo="Typo.h4" Class="text-white">Anything sounds good.</MudText>
-            @if (isAuthenticated)
-            {
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="Logout">
-                    Logout
-                </MudButton>
-            }
-            else
+            @if (!isAuthenticated)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SignInWithGoogle">
                     Sign In with Google
@@ -49,7 +44,7 @@
                                 <MudGrid>
                                     <MudItem xs="6">
                                         <MudText Typo="Typo.h6">@recipe.Name</MudText>
-                                            <MudText Typo="Typo.body1" Class="mt-1">@recipe.Ingredients</MudText>
+                                            <MudText Typo="Typo.body1" Class="mt-1">@string.Join(", ", recipe.Ingredients)</MudText>
                                         </MudItem>
                                         <MudItem xs="6" Class="text-right">
                                             <MudText Typo="Typo.caption" Class="text-gray-500">@recipe.Calories cal | @recipe.PrepTime</MudText>
@@ -101,32 +96,40 @@
             {
                 Navigation.NavigateTo($"/signup?name={Uri.EscapeDataString(user.DisplayName)}&email={Uri.EscapeDataString(user.Email)}");
             }
+            else
+            {
+                Navigation.Refresh();
+            }
         }
     }
 
     protected override async Task OnInitializedAsync()
     {
-        await AuthService.HandleAuthenticationAsync(AuthStateTask);
-        var authState = await AuthService.GetAuthenticationStateAsync();
-        isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
-
-        if (isAuthenticated)
+        if (AuthStateTask != null)
         {
-            var email = authState.User.FindFirst(c => c.Type == ClaimTypes.Email)?.Value;
-            if (email != null)
+            await AuthService.HandleAuthenticationAsync(AuthStateTask);
+            var authState = await AuthService.GetAuthenticationStateAsync();
+            isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+
+            if (isAuthenticated)
             {
-                weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(email);
+                var email = authState.User.FindFirst(c => c.Type == ClaimTypes.Email)?.Value;
+                if (email != null)
+                {
+                    weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(email);
+                }
             }
         }
     }
 
     private async Task RegeneratePlan()
     {
-        await MealPlanClientService.RegeneratePlanAsync();
         var authState = await AuthService.GetAuthenticationStateAsync();
         var email = authState.User.FindFirst(c => c.Type == ClaimTypes.Email)?.Value;
         if (email != null)
         {
+            var userPreferences = await UserClientService.GetUserPreferencesAsync(email);
+            await MealPlanClientService.RegeneratePlanAsync();
             weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(email);
         }
     }
@@ -154,10 +157,5 @@
     private void AdjustMealPlan()
     {
         Navigation.NavigateTo("/adjust-plan");
-    }
-
-    private async Task Logout()
-    {
-        await AuthService.LogoutAsync();
     }
 }

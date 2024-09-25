@@ -7,20 +7,20 @@ namespace ASGBackend.Services
     {
         private readonly OpenAIService _openAIService;
         private readonly UserClusteringAgent _userClusteringAgent;
-        private readonly Dictionary<int, string> _clusterRecipeCache;
+        private readonly Dictionary<int, Recipe> _clusterRecipeCache;
 
         public RecipeRecommendationService(OpenAIService openAIService, UserClusteringAgent userClusteringAgent)
         {
             _openAIService = openAIService;
             _userClusteringAgent = userClusteringAgent;
-            _clusterRecipeCache = new Dictionary<int, string>();
+            _clusterRecipeCache = new Dictionary<int, Recipe>();
         }
 
-        public async Task<string> GetRecipeRecommendation(User user)
+        public async Task<Recipe> GetRecipeRecommendation(User user)
         {
             int userCluster = _userClusteringAgent.PredictCluster(user);
 
-            if (_clusterRecipeCache.TryGetValue(userCluster, out string cachedRecommendation))
+            if (_clusterRecipeCache.TryGetValue(userCluster, out Recipe cachedRecommendation))
             {
                 return cachedRecommendation;
             }
@@ -31,7 +31,7 @@ namespace ASGBackend.Services
                                         $"Household size: {user.HouseholdSize}, " +
                                         $"Cooking skill level: {user.CookingSkillLevel}";
 
-            string recommendation = await _openAIService.GenerateRecipeRecommendation(userPreferences);
+            Recipe recommendation = await _openAIService.GenerateRecipeRecommendation(userPreferences);
 
             _clusterRecipeCache[userCluster] = recommendation;
 

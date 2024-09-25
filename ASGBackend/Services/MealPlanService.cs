@@ -1,32 +1,44 @@
+using ASGBackend.Services;
 using ASGShared.Models;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using ASGBackend.Data;
 
 namespace ASG.Services
 {
     public class MealPlanService
     {
         private readonly ILogger<MealPlanService> _logger;
+        private readonly OpenAIService _openAIService;
+        private readonly ApplicationDbContext _dbContext;
 
-        public MealPlanService(ILogger<MealPlanService> logger)
+        public MealPlanService(ILogger<MealPlanService> logger, OpenAIService openAIService, ApplicationDbContext dbContext)
         {
             _logger = logger;
+            _openAIService = openAIService;
+            _dbContext = dbContext;
         }
 
-        public List<Recipe> GetWeeklyPlan(string email)
+        public async Task<List<MealPlanRecipe>> GetWeeklyPlan(string email)
         {
             try
             {
-                // Implement logic to get the weekly plan based on the user's email
-                return new List<Recipe>
+                var mealPlan = await _dbContext.MealPlans
+                    .Include(mp => mp.Recipes)
+                    .ThenInclude(mpr => mpr.RecipeId)
+                    .FirstOrDefaultAsync(mp => mp.UserId == email);
+
+                if (mealPlan != null)
                 {
-                    new Recipe { Name = "Vegetarian Lasagna", Calories = 450, PrepTime = "45 min", CuisineType = "Italian", Ingredients = "Ingredients for Vegetarian Lasagna", Instructions = "Instructions for Vegetarian Lasagna" },
-                    new Recipe { Name = "Grilled Salmon with Asparagus", Calories = 380, PrepTime = "30 min", CuisineType = "American", Ingredients = "Ingredients for Grilled Salmon with Asparagus", Instructions = "Instructions for Grilled Salmon with Asparagus" },
-                    new Recipe { Name = "Chicken Stir Fry", Calories = 420, PrepTime = "25 min", CuisineType = "Asian", Ingredients = "Ingredients for Chicken Stir Fry", Instructions = "Instructions for Chicken Stir Fry" },
-                    new Recipe { Name = "Quinoa Salad with Roasted Vegetables", Calories = 350, PrepTime = "20 min", CuisineType = "Mediterranean", Ingredients = "Ingredients for Quinoa Salad with Roasted Vegetables", Instructions = "Instructions for Quinoa Salad with Roasted Vegetables" },
-                    new Recipe { Name = "Homemade Pizza", Calories = 500, PrepTime = "40 min", CuisineType = "Italian", Ingredients = "Ingredients for Homemade Pizza", Instructions = "Instructions for Homemade Pizza" },
-                    new Recipe { Name = "Beef Tacos", Calories = 460, PrepTime = "35 min", CuisineType = "Mexican", Ingredients = "Ingredients for Beef Tacos", Instructions = "Instructions for Beef Tacos" },
-                    new Recipe { Name = "Lentil Soup", Calories = 300, PrepTime = "50 min", CuisineType = "Middle Eastern", Ingredients = "Ingredients for Lentil Soup", Instructions = "Instructions for Lentil Soup" },
-                };
+                    return mealPlan.Recipes;
+                }
+
+                // Return an empty list if no meal plan is found
+                return new List<MealPlanRecipe>();
             }
             catch (Exception ex)
             {
@@ -35,13 +47,34 @@ namespace ASG.Services
             }
         }
 
-
-        public void RegeneratePlan()
+        public async Task<MealPlanRecipe> RegenerateRecipe(string email, string userPreferences, int dayOfWeek, string mealType)
         {
             try
             {
-                // Implement plan regeneration logic
-                Console.WriteLine($"Regenerating!");
+                var newRecipe = await _openAIService.GenerateRecipeRecommendation(userPreferences);
+
+                var mealPlan = await _dbContext.MealPlans
+                    .Include(mp => mp.Recipes)
+                    .FirstOrDefaultAsync(mp => mp.UserId == email);
+
+                if (mealPlan == null)
+                {
+                    mealPlan = new MealPlan { UserId = email, Recipes = new List<MealPlanRecipe>() };
+                    _dbContext.MealPlans.Add(mealPlan);
+                }
+
+                var mealPlanRecipe = new MealPlanRecipe
+                {
+                    RecipeId = newRecipe.Id,
+                    DayOfWeek = dayOfWeek,
+                    MealType = mealType
+                };
+
+                mealPlan.Recipes.Add(mealPlanRecipe);
+                await _dbContext.SaveChangesAsync();
+
+                Console.WriteLine($"Generated new recipe for {mealType} on day {dayOfWeek}: {newRecipe.Name}");
+                return mealPlanRecipe;
             }
             catch (Exception ex)
             {
@@ -50,12 +83,12 @@ namespace ASG.Services
             }
         }
 
-        public void LikeRecipe(Recipe recipe)
+        public void LikeRecipe(MealPlanRecipe recipe)
         {
             try
             {
                 // Implement like logic
-                Console.WriteLine($"Liked recipe: {recipe.Name}");
+                Console.WriteLine($"Liked recipe: {recipe.RecipeId}");
             }
             catch (Exception ex)
             {
@@ -64,12 +97,12 @@ namespace ASG.Services
             }
         }
 
-        public void DislikeRecipe(Recipe recipe)
+        public void DislikeRecipe(MealPlanRecipe recipe)
         {
             try
             {
                 // Implement dislike logic
-                Console.WriteLine($"Disliked recipe: {recipe.Name}");
+                Console.WriteLine($"Disliked recipe: {recipe.RecipeId}");
             }
             catch (Exception ex)
             {
@@ -79,3 +112,4 @@ namespace ASG.Services
         }
     }
 }
+
