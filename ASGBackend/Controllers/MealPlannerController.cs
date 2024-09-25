@@ -46,22 +46,62 @@ namespace ASGBackend.Controllers
             }
         }
 
-        [HttpPost("regenerate")]
-        public async Task<IActionResult> RegenerateRecipe([FromBody] RegenerateRecipeRequest request)
+        [HttpPost("{email}/recipes/{recipeId}/replace")]
+        public async Task<IActionResult> ReplaceRecipe([FromBody] GenerateRecipeRequest request, string email, int recipeId)
         {
-            if (request == null || string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.UserPreferences))
+            if (request == null || request.UserPreferences == null || recipeId <= 0 || string.IsNullOrWhiteSpace(email))
             {
                 return BadRequest("Invalid request data.");
             }
 
             try
             {
-                var newRecipe = await _mealPlanService.RegenerateRecipe(request.Email, request.UserPreferences, request.DayOfWeek, request.MealType);
+                var newRecipe = await _mealPlanService.ReplaceRecipeAsync(email, recipeId, request.UserPreferences);
+                return Ok(newRecipe);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error replacing recipe");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpPost("recipes/generate")]
+        public async Task<IActionResult> GenerateRecipe([FromBody] GenerateRecipeRequest request)
+        {
+            if (request == null || request.UserPreferences == null)
+            {
+                return BadRequest("Invalid request data.");
+            }
+
+            try
+            {
+                var newRecipe = await _mealPlanService.RegenerateRecipe(request.UserPreferences);
                 return Ok(newRecipe);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error regenerating recipe");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpPost("regenerate/mealplan")]
+        public async Task<IActionResult> RegenerateMealPlan([FromBody] RegenerateMealPlanRequest request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.Email) || request.UserPreferences == null)
+            {
+                return BadRequest("Invalid request data.");
+            }
+
+            try
+            {
+                var newMealPlan = await _mealPlanService.RegenerateMealPlanAsync(request.Email, request.UserPreferences);
+                return Ok(newMealPlan);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error regenerating meal plan");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -95,13 +135,5 @@ namespace ASGBackend.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
-    }
-
-    public class RegenerateRecipeRequest
-    {
-        public string Email { get; set; }
-        public string UserPreferences { get; set; }
-        public int DayOfWeek { get; set; }
-        public string MealType { get; set; }
     }
 }

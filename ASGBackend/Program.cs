@@ -7,8 +7,6 @@ using ASGBackend.Services;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,19 +28,42 @@ FirebaseApp.Create(new AppOptions()
     Credential = GoogleCredential.FromFile(firebaseCredentialPath)
 });
 
+// Retrieve the Gemini API key from environment variables
+var geminiApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+if (string.IsNullOrEmpty(geminiApiKey))
+{
+    throw new InvalidOperationException("Gemini API key is not set in environment variables.");
+}
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<FirebaseService>();
-builder.Services.AddHttpClient<OpenAIService>();
+
+// Configure HttpClient for GeminiService
+builder.Services.AddHttpClient<GeminiService>();
+
+// Register GeminiService with the API key
+builder.Services.AddSingleton<GeminiService>(provider =>
+{
+    var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(GeminiService));
+    var logger = provider.GetRequiredService<ILogger<GeminiService>>();
+    return new GeminiService(httpClient, geminiApiKey, logger);
+});
+
 builder.Services.AddSingleton<UserClusteringAgent>();
 builder.Services.AddScoped<MealPlanService>();
 builder.Services.AddScoped<UserService>();
 
-//repositories
+// Register repositories
 builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IMealPlanRepository, MealPlanRepository>(); // Add this line
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -51,17 +72,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Register AIAgentService with dependencies
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton(serviceProvider =>
-{
-    var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-    var httpClient = httpClientFactory.CreateClient();
-    var openAIApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-    if (string.IsNullOrEmpty(openAIApiKey))
-    {
-        throw new InvalidOperationException("The OPENAI_API_KEY environment variable is not set.");
-    }
-    return new AIAgentService(httpClient, openAIApiKey);
-});
+builder.Services.AddSingleton<AIAgentService>();
 
 builder.Services.AddControllers();
 
@@ -89,15 +100,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-//TEMP
-// Seed initial data
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    DataSeeder.SeedInitialData(dbContext);
-}
-
-
+// Seed initial data to DB
+//using (var scope = app.Services.CreateScope())
+//{
+//    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//    DataSeeder.SeedInitialData(dbContext);
+//}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

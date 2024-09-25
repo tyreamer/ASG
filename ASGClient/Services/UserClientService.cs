@@ -62,7 +62,7 @@ namespace ASG.Services
 
         public async Task<UserPreferences> GetUserPreferencesAsync(string email)
         {
-            var response = await _httpClient.GetAsync($"api/user/preferences?email={email}");
+            var response = await _httpClient.GetAsync($"api/users/{email}/preferences");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<UserPreferences>() ?? new UserPreferences();
         }

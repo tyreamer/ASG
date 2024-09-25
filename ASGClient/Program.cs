@@ -26,5 +26,6 @@ builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().Cre
 builder.Services.AddScoped<MealPlanClientService>();
 builder.Services.AddScoped<UserClientService>();
 builder.Services.AddMudServices();
+builder.Services.AddMudBlazorDialog();
 
 await builder.Build().RunAsync();

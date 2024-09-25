@@ -3,19 +3,25 @@
 @using System.Security.Claims
 @using ASGShared.Models
 @using ASG.Services
+@using ASGClient.Components
 @using Microsoft.AspNetCore.Components
+@using MudBlazor
 @inject IJSRuntime JsRuntime
 @inject AuthenticationService AuthService
 @inject NavigationManager Navigation
 @inject MealPlanClientService MealPlanClientService
 @inject UserClientService UserClientService
-@using MudBlazor
+@inject IDialogService DialogService
 
 <MudContainer Class="min-h-screen bg-gray-50">
     <MudAppBar Elevation="0" Color="Color.Transparent">
         <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <MudText Typo="Typo.h4" Class="text-white">Anything sounds good.</MudText>
-            @if (!isAuthenticated)
+            @if (isLoading)
+            {
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            }
+            else if (!isAuthenticated)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SignInWithGoogle">
                     Sign In with Google
@@ -36,34 +42,43 @@
                     </MudButton>
                 </MudContainer>
 
-                <MudGrid Class="max-w-7xl">
-                    @foreach (var recipe in weeklyPlan)
-                    {
-                        <MudItem xs="12">
-                            <MudPaper Class="p-4 mb-4">
-                                <MudGrid>
-                                    <MudItem xs="6">
-                                        <MudText Typo="Typo.h6">@recipe.Name</MudText>
-                                            <MudText Typo="Typo.body1" Class="mt-1">@string.Join(", ", recipe.Ingredients)</MudText>
-                                        </MudItem>
-                                        <MudItem xs="6" Class="text-right">
-                                            <MudText Typo="Typo.caption" Class="text-gray-500">@recipe.Calories cal | @recipe.PrepTime</MudText>
-                                        </MudItem>
-                                    </MudGrid>
-                                    <MudContainer Class="mt-4 flex justify-between items-center">
-                                        <MudContainer Class="flex space-x-2">
-                                            <MudIconButton Icon="thumb_up" Color="Color.Primary" OnClick="() => LikeRecipe(recipe)" />
-                                            <MudIconButton Icon="thumb_down" Color="Color.Primary" OnClick="() => DislikeRecipe(recipe)" />
+                @if (isRegeneratingMealPlan)
+                {
+                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+                    <MudText Typo="Typo.body1" Class="mt-2">Replacing meal...</MudText>
+                }
+                else
+                {
+                    <MudGrid Class="max-w-7xl">
+                        @foreach (var recipe in weeklyPlan)
+                        {
+                            <MudItem xs="12">
+                                <MudPaper Class="p-4 mb-4">
+                                    <MudGrid>
+                                        <MudItem xs="6">
+                                            <MudText Typo="Typo.h6">@recipe.Name</MudText>
+                                                <MudText Typo="Typo.body1" Class="mt-1">@string.Join(", ", recipe.Ingredients)</MudText>
+                                            </MudItem>
+                                            <MudItem xs="6" Class="text-right">
+                                                <MudText Typo="Typo.caption" Class="text-gray-500">Calories: @recipe.Calories</MudText>
+                                                <MudText Typo="Typo.caption" Class="text-gray-500">Cooking Time: @recipe.PrepTime</MudText>
+                                            </MudItem>
+                                        </MudGrid>
+                                        <MudContainer Class="mt-4 flex justify-between items-center">
+                                            <MudContainer Class="flex space-x-2">
+                                                <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Primary" OnClick="() => LikeRecipe(recipe)" Style="color: blue; background-color: white;" />
+                                                <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" Color="Color.Primary" OnClick="() => DislikeRecipe(recipe)" Style="color: blue; background-color: white;" />
+                                            </MudContainer>
+                                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ViewRecipe(recipe)">
+                                                View Recipe
+                                                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="ml-1" />
+                                            </MudButton>
                                         </MudContainer>
-                                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ViewRecipe(recipe)">
-                                            View Recipe
-                                            <MudIcon Icon="arrow_forward" Class="ml-1" />
-                                        </MudButton>
-                                    </MudContainer>
-                                </MudPaper>
-                            </MudItem>
-                    }
-                </MudGrid>
+                                    </MudPaper>
+                                </MudItem>
+                        }
+                    </MudGrid>
+                }
 
                 <MudContainer Class="mt-8 flex justify-center space-x-4">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ViewGroceryList">
@@ -84,6 +99,8 @@
     [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
 
     private bool isAuthenticated;
+    private bool isLoading = true;
+    private bool isRegeneratingMealPlan = false;
     private List<Recipe> weeklyPlan = new List<Recipe>();
 
     private async Task SignInWithGoogle()
@@ -120,17 +137,39 @@
                 }
             }
         }
+        isLoading = false;
     }
 
-    private async Task RegeneratePlan()
+    private async Task<(string Email, UserPreferences Preferences)> GetUserEmailAndPreferences()
     {
         var authState = await AuthService.GetAuthenticationStateAsync();
         var email = authState.User.FindFirst(c => c.Type == ClaimTypes.Email)?.Value;
         if (email != null)
         {
             var userPreferences = await UserClientService.GetUserPreferencesAsync(email);
-            await MealPlanClientService.RegeneratePlanAsync();
+            return (email, userPreferences);
+        }
+        throw new InvalidOperationException("User is not authenticated or email is missing.");
+    }
+
+    private async Task RegeneratePlan()
+    {
+        isRegeneratingMealPlan = true;
+
+        try
+        {
+            var (email, userPreferences) = await GetUserEmailAndPreferences();
+            await MealPlanClientService.RegenerateMealPlanAsync(email, userPreferences);
             weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(email);
+            StateHasChanged();
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Handle the exception (e.g., show a message to the user)
+        }
+        finally
+        {
+            isRegeneratingMealPlan = false;
         }
     }
 
@@ -141,12 +180,32 @@
 
     private async Task DislikeRecipe(Recipe recipe)
     {
-        await MealPlanClientService.DislikeRecipeAsync(recipe);
+        //Ask user anything we should change? 
+        //want hot/cold, spicy/sweet? etc
+
+        isRegeneratingMealPlan = true;
+        try
+        {
+            var (email, userPreferences) = await GetUserEmailAndPreferences();
+            await MealPlanClientService.ReplaceRecipe(email, recipe.Id, userPreferences);
+            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(email);
+            StateHasChanged();
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Handle the exception (e.g., show a message to the user)
+        }
+        finally
+        {
+            isRegeneratingMealPlan = false;
+        }
     }
 
     private void ViewRecipe(Recipe recipe)
     {
-        // Navigate to recipe detail page
+        var parameters = new DialogParameters { ["Recipe"] = recipe };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        DialogService.Show<RecipeDialog>("Recipe Details", parameters, options);
     }
 
     private void ViewGroceryList()

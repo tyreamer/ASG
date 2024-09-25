@@ -125,5 +125,23 @@ namespace ASGBackend.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        [HttpGet("{email}/preferences")]
+        public async Task<IActionResult> GetUserPreferences(string email)
+        {
+            // Fetch user preferences based on email
+            var user = await _userService.GetUserByEmailAsync(email);
+            UserPreferences userPreferences;
+            if (user == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                userPreferences = user.Preferences;
+            }
+
+            return Ok(userPreferences);
+        }
     }
 }

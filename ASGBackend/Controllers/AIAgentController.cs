@@ -20,13 +20,6 @@ namespace ASGBackend.Controllers
             _userClusteringAgent = userClusteringAgent;
         }
 
-        [HttpPost("generate-recipe")]
-        public async Task<IActionResult> GenerateRecipe([FromBody] UserPreferences preferences, [FromBody] Budget budget)
-        {
-            var recipe = await _aiAgentService.GenerateRecipe(preferences, budget);
-            return Ok(recipe);
-        }
-
         [HttpPost("classify-recipe")]
         public IActionResult ClassifyRecipe([FromBody] Recipe recipe)
         {
