@@ -59,5 +59,12 @@ namespace ASG.Services
             var response = await _httpClient.DeleteAsync($"api/users/{id}");
             return response.IsSuccessStatusCode;
         }
+
+        public async Task<UserPreferences> GetUserPreferencesAsync(string email)
+        {
+            var response = await _httpClient.GetAsync($"api/users/{email}/preferences");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<UserPreferences>() ?? new UserPreferences();
+        }
     }
 }

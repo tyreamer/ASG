@@ -4,6 +4,9 @@
 @inject FirebaseService FirebaseService
 @using System.Security.Claims
 @inject IDialogService DialogService
+@inject AuthenticationService AuthService
+@inject NavigationManager Navigation
+@inject UserClientService UserClientService
 
 <CascadingAuthenticationState>
     <MudThemeProvider @ref="_mudThemeProvider" @bind-IsDarkMode="_isDarkMode" Theme="@ASGTheme" DefaultScrollbar="true" />
@@ -20,11 +23,11 @@
                 <Authorized>
                     <MudGrid Justify="Justify.FlexEnd" AlignItems="AlignItems.Center">
                         <MudItem Class="align-center">
-                            <MudText Typo="Typo.body1"> @context.User.FindFirst(ClaimTypes.Email)?.Value </MudText>
-                            </MudItem>
-                            <MudItem Class="align-center">
-                                <MudButton Variant="Variant.Filled" Color="Color.Transparent" OnClick="SignOut" Class="ml-2">Logout</MudButton>
-                            </MudItem>
+                            <MudText Typo="Typo.h6" Color="Color.Dark"> @(_displayName ?? "Loading...") </MudText>
+                        </MudItem>
+                        <MudItem Class="align-center">
+                            <MudButton Variant="Variant.Filled" Color="Color.Transparent" OnClick="Logout" Class="ml-2">Logout</MudButton>
+                        </MudItem>
                         </MudGrid>
                     </Authorized>
                 </AuthorizeView>
@@ -32,10 +35,11 @@
         </MudLayout>
     </CascadingAuthenticationState>
 
-    @code {
+@code {
     private bool _isDarkMode;
     private MudThemeProvider? _mudThemeProvider;
     [CascadingParameter] private Task<AuthenticationState> AuthStateTask { get; set; } = default!;
+    private string? _displayName;
 
     private MudTheme ASGTheme = new MudTheme()
         {
@@ -72,6 +76,7 @@
             }
 
             await CheckAuthenticationState();
+            await LoadUserDisplayName();
             StateHasChanged();
         }
     }
@@ -85,6 +90,16 @@
         {
             Console.WriteLine("User is not authenticated, redirecting to home.");
             Navigation.NavigateTo("/");
+        }
+    }
+
+    private async Task LoadUserDisplayName()
+    {
+        var email = await AuthService.GetAuthenticatedUserEmailAsync();
+        if (!string.IsNullOrEmpty(email))
+        {
+            var user = await UserClientService.GetUserAsync(email);
+            _displayName = user?.DisplayName;
         }
     }
 
@@ -103,8 +118,9 @@
         return Task.CompletedTask;
     }
 
-    private async Task SignOut()
+    private async Task Logout()
     {
-        await FirebaseService.SignOutAsync();
+        await AuthService.LogoutAsync();
+        Navigation.Refresh();
     }
 }

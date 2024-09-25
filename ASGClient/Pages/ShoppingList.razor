@@ -1,0 +1,21 @@
+﻿@page "/shopping-list"
+@inject HttpClient Http
+
+<h3>Your Shopping List for the Week</h3>
+
+<ul>
+    @foreach (var item in shoppingList)
+    {
+        <li>@item</li>
+    }
+</ul>
+
+@code {
+    private List<string> shoppingList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetAsync("api/shoppinglist");
+        shoppingList = await response.Content.ReadFromJsonAsync<List<string>>();
+    }
+}

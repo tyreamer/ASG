@@ -4,6 +4,7 @@ using ASGBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASGBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240925024938_MealPlanAdded")]
+    partial class MealPlanAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -56,6 +59,10 @@ namespace ASGBackend.Migrations
                     b.Property<int>("MealPlanId")
                         .HasColumnType("int");
 
+                    b.Property<string>("MealType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("RecipeId")
                         .HasColumnType("int");
 
@@ -76,9 +83,8 @@ namespace ASGBackend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Calories")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Calories")
+                        .HasColumnType("int");
 
                     b.Property<string>("CuisineType")
                         .IsRequired()
@@ -218,6 +224,9 @@ namespace ASGBackend.Migrations
                                     b2.Property<string>("UserPreferencesUserId1")
                                         .HasColumnType("nvarchar(450)");
 
+                                    b2.Property<int>("Id")
+                                        .HasColumnType("int");
+
                                     b2.Property<bool>("IsGlutenFree")
                                         .HasColumnType("bit");
 
@@ -245,6 +254,9 @@ namespace ASGBackend.Migrations
 
                                     b2.Property<bool>("HighProtein")
                                         .HasColumnType("bit");
+
+                                    b2.Property<int>("Id")
+                                        .HasColumnType("int");
 
                                     b2.Property<bool>("LowCarb")
                                         .HasColumnType("bit");

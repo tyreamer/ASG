@@ -1,7 +1,9 @@
-using ASGShared.Models;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using ASGShared.Models;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ASG.Services
 {
@@ -16,27 +18,30 @@ namespace ASG.Services
 
         public async Task<List<Recipe>> GetWeeklyPlanAsync(string email)
         {
-            var response = await _httpClient.GetAsync($"api/mealplanner/weekly?email={email}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<Recipe>>() ?? [];
+            var response = await _httpClient.GetFromJsonAsync<List<MealPlanRecipe>>($"api/mealplanner/weekly?email={email}");
+            return response?.Select(mpr => mpr.Recipe).ToList() ?? new List<Recipe>();
         }
 
-        public async Task RegeneratePlanAsync()
+        public async Task ReplaceRecipe(string email, int recipeId, UserPreferences userPreferences)
         {
-            var response = await _httpClient.PostAsync("api/mealplanner/regenerate", null);
-            response.EnsureSuccessStatusCode();
-        }
-
-        public async Task LikeRecipeAsync(Recipe recipe)
-        {
-            var response = await _httpClient.PostAsJsonAsync("api/mealplanner/like", recipe);
-            response.EnsureSuccessStatusCode();
+            var request = new GenerateRecipeRequest { UserPreferences = userPreferences };
+            await _httpClient.PostAsJsonAsync($"api/mealplanner/{email}/recipes/{recipeId}/replace", request);
         }
 
         public async Task DislikeRecipeAsync(Recipe recipe)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/mealplanner/dislike", recipe);
-            response.EnsureSuccessStatusCode();
+            await _httpClient.PostAsJsonAsync("api/mealplanner/dislike", recipe);
+        }
+
+        public async Task RegenerateMealPlanAsync(string email, UserPreferences userPreferences)
+        {
+            var request = new RegenerateMealPlanRequest { Email = email, UserPreferences = userPreferences };
+            await _httpClient.PostAsJsonAsync("api/mealplanner/regenerate/mealplan", request);
+        }
+
+        public async Task LikeRecipeAsync(Recipe recipe)
+        {
+            await _httpClient.PostAsJsonAsync("api/mealplanner/like", recipe);
         }
     }
 }

@@ -8,16 +8,12 @@ namespace ASGBackend.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
-            Users = Set<User>();
-            UserPreferences = Set<UserPreferences>();
-            DietaryRestrictions = Set<DietaryRestrictions>();
-            DietaryRestrictionsUsers = Set<DietaryRestrictionsUser>();
         }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<UserPreferences> UserPreferences { get; set; }
-        public DbSet<DietaryRestrictions> DietaryRestrictions { get; set; }
-        public DbSet<DietaryRestrictionsUser> DietaryRestrictionsUsers { get; set; }
+        public DbSet<User> Users { get; set; } = null!;
+        public DbSet<MealPlan> MealPlans { get; set; } = null!;
+        public DbSet<MealPlanRecipe> MealPlanRecipes { get; set; } = null!;
+        public DbSet<Recipe> Recipes { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,20 +25,31 @@ namespace ASGBackend.Data
                     b.Property(bm => bm.Amount).HasColumnType("decimal(18,2)"); // Specify precision and scale
                 });
 
-            modelBuilder.Entity<DietaryRestrictionsUser>()
-                .HasKey(dru => new { dru.UserId, dru.DietaryRestrictionsId });
+            modelBuilder.Entity<User>()
+                .OwnsOne(u => u.Preferences, p =>
+                {
+                    p.OwnsOne(up => up.DietaryRestrictions);
+                    p.OwnsOne(up => up.NutritionalGoals);
+                    p.Property(up => up.Allergies).HasConversion(
+                        v => string.Join(',', v),
+                        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+                    p.Property(up => up.FavoriteCuisines).HasConversion(
+                        v => string.Join(',', v),
+                        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+                    p.Property(up => up.DislikedFoods).HasConversion(
+                        v => string.Join(',', v),
+                        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+                });
 
-            modelBuilder.Entity<DietaryRestrictionsUser>()
-                .HasOne(dru => dru.User)
-                .WithMany(u => u.DietaryRestrictionsUsers)
-                .HasForeignKey(dru => dru.UserId)
-                .OnDelete(DeleteBehavior.NoAction); // Specify ON DELETE NO ACTION
-
-            modelBuilder.Entity<DietaryRestrictionsUser>()
-                .HasOne(dru => dru.DietaryRestrictions)
+            modelBuilder.Entity<MealPlanRecipe>()
+                .HasOne(mpr => mpr.Recipe)
                 .WithMany()
-                .HasForeignKey(dru => dru.DietaryRestrictionsId)
-                .OnDelete(DeleteBehavior.NoAction); // Specify ON DELETE NO ACTION
+                .HasForeignKey(mpr => mpr.RecipeId);
+
+            modelBuilder.Entity<MealPlanRecipe>()
+                .HasOne(mpr => mpr.MealPlan)
+                .WithMany(mp => mp.Recipes)
+                .HasForeignKey(mpr => mpr.MealPlanId);
         }
     }
 }
