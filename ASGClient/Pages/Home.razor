@@ -13,10 +13,10 @@
 @inject UserClientService UserClientService
 @inject IDialogService DialogService
 
-<MudContainer Class="min-h-screen bg-gray-50">
-    <MudAppBar Elevation="0" Color="Color.Transparent">
+<MudContainer Class="bg-gray-50">
+    <MudAppBar Elevation="0" Color="Color.Primary">
         <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <MudText Typo="Typo.h4" Class="text-white">Anything sounds good.</MudText>
+            <MudText Typo="Typo.h3">Anything sounds good.</MudText>
             @if (isLoading)
             {
                 <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
@@ -35,10 +35,14 @@
         <MudContainer Class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <MudContainer Class="px-4 py-6 sm:px-0">
                 <MudContainer Class="flex justify-between items-center mb-6">
-                    <MudText Typo="Typo.h4">This Week's Plan</MudText>
+                    <MudText Typo="Typo.h4" Align="Align.Center">This Week's Plan</MudText>
                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="RegeneratePlan">
                         <MudIcon Icon="refresh" Class="mr-2" />
                         Regenerate Plan
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ViewGroceryList">
+                        <MudIcon Icon="shopping_cart" Class="mr-2" />
+                        View Grocery List
                     </MudButton>
                 </MudContainer>
 
@@ -49,53 +53,51 @@
                 }
                 else
                 {
-                    <MudGrid Class="max-w-7xl">
-                        @foreach (var recipe in weeklyPlan)
-                        {
-                            <MudItem xs="12">
-                                <MudPaper Class="p-4 mb-4">
-                                    <MudGrid>
-                                        <MudItem xs="6">
-                                            <MudText Typo="Typo.h6">@recipe.Name</MudText>
-                                                <MudText Typo="Typo.body1" Class="mt-1">@string.Join(", ", recipe.Ingredients)</MudText>
-                                            </MudItem>
-                                            <MudItem xs="6" Class="text-right">
-                                                <MudText Typo="Typo.caption" Class="text-gray-500">Calories: @recipe.Calories</MudText>
-                                                <MudText Typo="Typo.caption" Class="text-gray-500">Cooking Time: @recipe.PrepTime</MudText>
-                                            </MudItem>
-                                        </MudGrid>
-                                        <MudContainer Class="mt-4 flex justify-between items-center">
-                                            <MudContainer Class="flex space-x-2">
-                                                <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Primary" OnClick="() => LikeRecipe(recipe)" Style="color: blue; background-color: white;" />
-                                                <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" Color="Color.Primary" OnClick="() => DislikeRecipe(recipe)" Style="color: blue; background-color: white;" />
-                                            </MudContainer>
-                                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ViewRecipe(recipe)">
-                                                View Recipe
-                                                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="ml-1" />
-                                            </MudButton>
-                                        </MudContainer>
-                                    </MudPaper>
-                                </MudItem>
-                        }
-                    </MudGrid>
-                }
+                    @foreach (var recipe in weeklyPlan)
+                    {
+                        <MudContainer Class="mb-8 recipe-container">
+                            <MudPaper Class="p-4 mb-4">
+                                <MudGrid Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                    <MudItem xs="8">
+                                        <MudText Typo="Typo.h6">@recipe.Name</MudText>
+                                        <MudText Typo="Typo.body1" Class="mt-1">@string.Join(", ", recipe.Ingredients)</MudText>
+                                    </MudItem>
+                                    <MudItem xs="4" Class="text-right">
+                                        <MudText Typo="Typo.h3" Class="p-2 bg-primary-light text-white" Align="Align.Center">@recipe.PrepTime</MudText>
+                                    </MudItem>
+                                </MudGrid>
 
-                <MudContainer Class="mt-8 flex justify-center space-x-4">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ViewGroceryList">
-                        <MudIcon Icon="shopping_cart" Class="mr-2" />
-                        View Grocery List
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AdjustMealPlan">
-                        <MudIcon Icon="calendar_today" Class="mr-2" />
-                        Adjust Meal Plan
-                    </MudButton>
-                </MudContainer>
+                                <MudGrid Class="mt-2">
+                                    <MudItem xs="12">
+                                        <MudText Typo="Typo.caption" Class="text-gray-500">Calories: @recipe.Calories</MudText>
+                                    </MudItem>
+                                </MudGrid>
+
+                                <!-- Actions: Like, Dislike, and View Recipe at the bottom -->
+                                <MudContainer Class="mt-4 flex justify-between items-center">
+                                    <MudContainer Class="flex space-x-2">
+                                        <!-- Like and Dislike buttons -->
+                                        <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Primary" OnClick="() => LikeRecipe(recipe)" Class="mr-2" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" Color="Color.Primary" OnClick="() => DislikeRecipe(recipe)" />
+                                    </MudContainer>
+                                    <MudContainer Class="text-left">
+                                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ViewRecipe(recipe)">
+                                            View Recipe
+                                            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="ml-1" />
+                                        </MudButton>
+                                    </MudContainer>
+                                </MudContainer>
+                            </MudPaper>
+                        </MudContainer>
+                    }
+                }
             </MudContainer>
         </MudContainer>
     }
 </MudContainer>
 
 @code {
+    private bool _isDarkMode;
     [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
 
     private bool isAuthenticated;
@@ -180,7 +182,7 @@
 
     private async Task DislikeRecipe(Recipe recipe)
     {
-        //Ask user anything we should change? 
+        //Ask user anything we should change?
         //want hot/cold, spicy/sweet? etc
 
         isRegeneratingMealPlan = true;

@@ -9,11 +9,15 @@
 @inject UserClientService UserClientService
 
 <CascadingAuthenticationState>
+    <!-- MudThemeProvider should not contain any child components -->
     <MudThemeProvider @ref="_mudThemeProvider" @bind-IsDarkMode="_isDarkMode" Theme="@ASGTheme" DefaultScrollbar="true" />
+
+    <!-- Move child content outside of the MudThemeProvider -->
     <MudPopoverProvider />
     <MudDialogProvider />
     <MudSnackbarProvider />
 
+    <!-- Your layout content -->
     <MudLayout>
         <MudMainContent>
             @Body
@@ -22,48 +26,54 @@
             <AuthorizeView>
                 <Authorized>
                     <MudGrid Justify="Justify.FlexEnd" AlignItems="AlignItems.Center">
-                        <MudItem Class="align-center">
-                            <MudText Typo="Typo.h6" Color="Color.Dark"> @(_displayName ?? "Loading...") </MudText>
+                        <MudItem>
+                            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
+                                           Color="Color.Primary"
+                                           OnClick="ToggleTheme"
+                                           Class="ml-auto" />
                         </MudItem>
                         <MudItem Class="align-center">
-                            <MudButton Variant="Variant.Filled" Color="Color.Transparent" OnClick="Logout" Class="ml-2">Logout</MudButton>
+                            <MudText Typo="Typo.h6" Color="Color.Primary"> @(_displayName ?? "Loading...") </MudText>
                         </MudItem>
-                        </MudGrid>
-                    </Authorized>
-                </AuthorizeView>
-            </MudAppBar>
-        </MudLayout>
-    </CascadingAuthenticationState>
+                        <MudItem Class="align-center">
+                            <MudButton Variant="Variant.Filled" Color="@(_isDarkMode ? Color.Primary :  Color.Dark)" OnClick="Logout" Class="ml-2">Logout</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </Authorized>
+            </AuthorizeView>
+        </MudAppBar>
+    </MudLayout>
+</CascadingAuthenticationState>
 
 @code {
-    private bool _isDarkMode;
     private MudThemeProvider? _mudThemeProvider;
-    [CascadingParameter] private Task<AuthenticationState> AuthStateTask { get; set; } = default!;
-    private string? _displayName;
-
-    private MudTheme ASGTheme = new MudTheme()
+    private bool _isDarkMode;
+    private MudTheme ASGTheme = new MudTheme
         {
             PaletteLight = new PaletteLight()
             {
-                Primary = "#3490dc", // Updated primary color
-                Secondary = "#ffed4a", // Updated secondary color
-                Background = "#f8fafc", // Updated background color
-                AppbarBackground = "#ffffff", // Updated appbar background color
-                DrawerBackground = "#ffffff", // Updated drawer background color
-                DrawerText = Colors.Shades.Black, // Updated drawer text color
-                DrawerIcon = Colors.Shades.Black // Updated drawer icon color
+                Primary = "#ff6f61", // Warm red-orange for energy
+                Secondary = "#4caf50", // Fresh green for health
+                Background = "#fdf7f2", // Soft off-white for a cozy atmosphere
+                AppbarBackground = "#ffffff", // Clean white appbar background
+                DrawerBackground = "#f4f4f4", // Light neutral for subtle contrast
+                DrawerText = "#333333", // Dark gray for readability
+                DrawerIcon = "#4caf50" // Consistent fresh green for icons
             },
             PaletteDark = new PaletteDark()
             {
-                Primary = "#3490dc", // Updated primary color
-                Secondary = "#ffed4a", // Updated secondary color
-                Background = "#2d3748", // Updated background color
-                AppbarBackground = "#1a202c", // Updated appbar background color
-                DrawerBackground = "#1a202c", // Updated drawer background color
-                DrawerText = Colors.Shades.White, // Updated drawer text color
-                DrawerIcon = Colors.Shades.White // Updated drawer icon color
+                Primary = "#ff6f61", // Same warm red-orange for consistency
+                Secondary = "#4caf50", // Same fresh green
+                Background = "#2c3e50", // Deep slate blue for a modern look
+                AppbarBackground = "#1f2a34", // Slightly lighter tone for definition
+                DrawerBackground = "#1f2a34", // Unified dark tone
+                DrawerText = "#ffffff", // White text for readability
+                DrawerIcon = "#4caf50" // Fresh green icons for consistency
             }
         };
+
+    [CascadingParameter] private Task<AuthenticationState> AuthStateTask { get; set; } = default!;
+    private string? _displayName;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -93,6 +103,15 @@
         }
     }
 
+    private async Task ToggleTheme()
+    {
+        if (_mudThemeProvider != null)
+        {
+            _isDarkMode = !_isDarkMode;
+            await _mudThemeProvider.SystemPreferenceChanged(_isDarkMode);
+        }
+    }
+
     private async Task LoadUserDisplayName()
     {
         var email = await AuthService.GetAuthenticatedUserEmailAsync();
@@ -106,7 +125,10 @@
     private bool IsExcludedFromAuth()
     {
         bool excludedFromAuth = Navigation.Uri.EndsWith("/explore", StringComparison.OrdinalIgnoreCase);
-        if (excludedFromAuth) { Console.WriteLine("User is excluded from authentication on this page."); } //verbose only
+        if (excludedFromAuth)
+        {
+            Console.WriteLine("User is excluded from authentication on this page."); // Verbose only
+        }
 
         return excludedFromAuth;
     }
