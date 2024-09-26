@@ -16,10 +16,11 @@ namespace ASG.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<Recipe>> GetWeeklyPlanAsync(string email)
+        public async Task<MealPlan> GetWeeklyPlanAsync(string email)
         {
-            var response = await _httpClient.GetFromJsonAsync<List<MealPlanRecipe>>($"api/mealplanner/weekly?email={email}");
-            return response?.Select(mpr => mpr.Recipe).ToList() ?? new List<Recipe>();
+            var response = await _httpClient.GetFromJsonAsync<MealPlan>($"api/mealplanner/weekly?email={email}");
+
+            return response ?? new MealPlan();
         }
 
         public async Task ReplaceRecipe(string email, int recipeId, UserPreferences userPreferences)

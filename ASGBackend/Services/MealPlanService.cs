@@ -27,32 +27,21 @@ namespace ASG.Services
             _mealPlanRepository = mealPlanRepository;
         }
 
-        public async Task<List<MealPlanRecipe>> GetWeeklyPlan(string email)
+        public async Task<MealPlan> GetWeeklyPlan(string email, DateTime? weekStarted = null)
         {
             try
             {
-                var weekStartDate = DateTime.Now.StartOfWeek(DayOfWeek.Sunday);
-                var mealPlan = await _mealPlanRepository.GetMealPlan(email, weekStartDate);
+                //TODO: add week start in the query
+                var weekStartDate = weekStarted ?? DateTime.Now;
+                var mealPlan = await _mealPlanRepository.GetMealPlan(email, weekStartDate.StartOfWeek(DayOfWeek.Sunday));
 
                 if (mealPlan != null)
                 {
-                    // Log the meal plan details
-                    _logger.LogInformation($"Meal plan found for user {email} with {mealPlan.Recipes.Count} recipes.");
-
-                    // Ensure all recipes are not null
-                    foreach (var mealPlanRecipe in mealPlan.Recipes)
-                    {
-                        if (mealPlanRecipe.Recipe == null)
-                        {
-                            _logger.LogWarning($"Recipe with ID {mealPlanRecipe.RecipeId} is null.");
-                        }
-                    }
-
-                    return mealPlan.Recipes;
+                    return mealPlan;
                 }
 
                 // Return an empty list if no meal plan is found
-                return new List<MealPlanRecipe>();
+                return new MealPlan();
             }
             catch (Exception ex)
             {

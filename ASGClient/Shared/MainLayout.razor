@@ -9,12 +9,31 @@
 @inject UserClientService UserClientService
 
 <CascadingAuthenticationState>
+    <!-- MudThemeProvider should not contain any child components -->
     <MudThemeProvider @ref="_mudThemeProvider" @bind-IsDarkMode="_isDarkMode" Theme="@ASGTheme" DefaultScrollbar="true" />
+
+    <!-- Move child content outside of the MudThemeProvider -->
     <MudPopoverProvider />
     <MudDialogProvider />
     <MudSnackbarProvider />
 
+    <!-- Your layout content -->
     <MudLayout>
+        <MudAppBar Elevation="0" Color="Color.Primary">
+            <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <MudText Typo="Typo.h5">Anything sounds good.</MudText>
+                @if (isLoading)
+                {
+                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+                }
+                else if (!isAuthenticated)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SignInWithGoogle">
+                        Sign In with Google
+                    </MudButton>
+                }
+            </MudContainer>
+        </MudAppBar>
         <MudMainContent>
             @Body
         </MudMainContent>
@@ -22,48 +41,64 @@
             <AuthorizeView>
                 <Authorized>
                     <MudGrid Justify="Justify.FlexEnd" AlignItems="AlignItems.Center">
-                        <MudItem Class="align-center">
-                            <MudText Typo="Typo.h6" Color="Color.Dark"> @(_displayName ?? "Loading...") </MudText>
+                        <MudItem>
+                            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
+                                           Color="Color.Primary"
+                                           OnClick="ToggleTheme"
+                                           Class="ml-auto" />
                         </MudItem>
                         <MudItem Class="align-center">
-                            <MudButton Variant="Variant.Filled" Color="Color.Transparent" OnClick="Logout" Class="ml-2">Logout</MudButton>
+                            <MudText Typo="Typo.h6" Color="Color.Primary"> @(_displayName ?? "Loading...") </MudText>
                         </MudItem>
-                        </MudGrid>
-                    </Authorized>
-                </AuthorizeView>
-            </MudAppBar>
-        </MudLayout>
-    </CascadingAuthenticationState>
+                        <MudItem Class="align-center">
+                            <MudButton Variant="Variant.Filled" Color="@(_isDarkMode ? Color.Primary :  Color.Dark)" OnClick="Logout" Class="ml-2">Logout</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </Authorized>
+            </AuthorizeView>
+        </MudAppBar>
+    </MudLayout>
+</CascadingAuthenticationState>
 
 @code {
-    private bool _isDarkMode;
     private MudThemeProvider? _mudThemeProvider;
-    [CascadingParameter] private Task<AuthenticationState> AuthStateTask { get; set; } = default!;
-    private string? _displayName;
-
-    private MudTheme ASGTheme = new MudTheme()
+    private bool _isDarkMode;
+    private MudTheme ASGTheme = new MudTheme
         {
             PaletteLight = new PaletteLight()
             {
-                Primary = "#3490dc", // Updated primary color
-                Secondary = "#ffed4a", // Updated secondary color
-                Background = "#f8fafc", // Updated background color
-                AppbarBackground = "#ffffff", // Updated appbar background color
-                DrawerBackground = "#ffffff", // Updated drawer background color
-                DrawerText = Colors.Shades.Black, // Updated drawer text color
-                DrawerIcon = Colors.Shades.Black // Updated drawer icon color
+                Primary = "#4CAF93",       /* Muted Green (main branding color) */
+                Secondary = "#80DEEA",      /* Soft Aqua (for secondary actions) */
+                Background = "#F9F9F9",     /* Very Light Grey (main background) */
+                AppbarBackground = "#F5F5F5",  /* Gray (for app bar/header) */
+                DrawerBackground = "#E0F2F1",  /* Light Mint Green (drawer background) */
+                DrawerText = "#2E2E2E",      /* Dark Charcoal Grey (drawer text for readability) */
+                DrawerIcon = "#4CAF93",      /* Muted Green (icons matching primary color) */
+                Success = "#66BB6A",        /* Soft Green (positive feedback) */
+                Warning = "#FFC107",        /* Muted Orange (subtle warning) */
+                Info = "#64B5A6",           /* Light Blue (informational feedback) */
+                Error = "#EF5350"
             },
             PaletteDark = new PaletteDark()
             {
-                Primary = "#3490dc", // Updated primary color
-                Secondary = "#ffed4a", // Updated secondary color
-                Background = "#2d3748", // Updated background color
-                AppbarBackground = "#1a202c", // Updated appbar background color
-                DrawerBackground = "#1a202c", // Updated drawer background color
-                DrawerText = Colors.Shades.White, // Updated drawer text color
-                DrawerIcon = Colors.Shades.White // Updated drawer icon color
+                Primary = "#81C784",        /* Soft Green (main branding color) */
+                Secondary = "#4DD0E1",      /* Light Aqua (for secondary actions) */
+                Background = "#121212",     /* Dark Grey (main background) */
+                AppbarBackground = "#1F1F1F",  /* Almost Black (for app bar/header) */
+                DrawerBackground = "#212121", /* Darker Grey (drawer background) */
+                DrawerText = "#E0E0E0",      /* Light Grey (drawer text for readability) */
+                DrawerIcon = "#81C784",      /* Soft Green (icons matching primary color) */
+                Success = "#66BB6A",        /* Soft Green (positive feedback) */
+                Warning = "#FFB74D",        /* Muted Yellow-Orange (warning feedback) */
+                Info = "#4FC3F7",           /* Light Blue (informational feedback) */
+                Error = "#E57373"          /* Soft Red (error feedback) */
             }
         };
+
+    [CascadingParameter] private Task<AuthenticationState> AuthStateTask { get; set; } = default!;
+    private string? _displayName;
+    private bool isLoading = true;
+    private bool isAuthenticated;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -86,10 +121,23 @@
         var authState = await AuthStateTask;
         var user = authState.User;
 
-        if (user != null && !user.Identity?.IsAuthenticated == true && !IsExcludedFromAuth())
+        isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
+
+        if (user != null && !isAuthenticated && !IsExcludedFromAuth())
         {
             Console.WriteLine("User is not authenticated, redirecting to home.");
             Navigation.NavigateTo("/");
+        }
+
+        isLoading = false;
+    }
+
+    private async Task ToggleTheme()
+    {
+        if (_mudThemeProvider != null)
+        {
+            _isDarkMode = !_isDarkMode;
+            await _mudThemeProvider.SystemPreferenceChanged(_isDarkMode);
         }
     }
 
@@ -106,7 +154,10 @@
     private bool IsExcludedFromAuth()
     {
         bool excludedFromAuth = Navigation.Uri.EndsWith("/explore", StringComparison.OrdinalIgnoreCase);
-        if (excludedFromAuth) { Console.WriteLine("User is excluded from authentication on this page."); } //verbose only
+        if (excludedFromAuth)
+        {
+            Console.WriteLine("User is excluded from authentication on this page."); // Verbose only
+        }
 
         return excludedFromAuth;
     }
@@ -122,5 +173,22 @@
     {
         await AuthService.LogoutAsync();
         Navigation.Refresh();
+    }
+
+    private async Task SignInWithGoogle()
+    {
+        var user = await AuthService.SignInWithGoogleAsync();
+        if (user != null)
+        {
+            var isRegistered = await AuthService.IsUserRegisteredAsync(user.Email);
+            if (!isRegistered)
+            {
+                Navigation.NavigateTo($"/signup?name={Uri.EscapeDataString(user.DisplayName)}&email={Uri.EscapeDataString(user.Email)}");
+            }
+            else
+            {
+                Navigation.Refresh();
+            }
+        }
     }
 }
