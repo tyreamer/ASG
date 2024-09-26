@@ -32,7 +32,7 @@ namespace ASGBackend.Controllers
         }
 
         [HttpGet("weekly")]
-        public async Task<ActionResult<List<MealPlanRecipe>>> GetWeeklyPlan([FromQuery] string email)
+        public async Task<ActionResult<MealPlan>> GetWeeklyPlan([FromQuery] string email)
         {
             try
             {

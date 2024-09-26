@@ -14,79 +14,75 @@
 @inject IDialogService DialogService
 
 <MudContainer Class="bg-gray-50">
-    <MudAppBar Elevation="0" Color="Color.Primary">
-        <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <MudText Typo="Typo.h3">Anything sounds good.</MudText>
-            @if (isLoading)
-            {
-                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-            }
-            else if (!isAuthenticated)
-            {
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SignInWithGoogle">
-                    Sign In with Google
-                </MudButton>
-            }
-        </MudContainer>
-    </MudAppBar>
 
-    @if (isAuthenticated)
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (isAuthenticated)
     {
         <MudContainer Class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <MudContainer Class="px-4 py-6 sm:px-0">
-                <MudContainer Class="flex justify-between items-center mb-6">
-                    <MudText Typo="Typo.h4" Align="Align.Center">This Week's Plan</MudText>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="RegeneratePlan">
-                        <MudIcon Icon="refresh" Class="mr-2" />
-                        Regenerate Plan
-                    </MudButton>
+                <MudContainer Class="flex flex-col items-center mb-6">
+                    <MudText Typo="Typo.h4" Align="Align.Center">Week of @mealPlanStartDate.ToString("MMMM dd, yyyy")</MudText>
+
+                    <MudItem xs="12" sm="12" Class="flex justify-center mb-2 sm:mb-0">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ConfirmRegeneratePlan">
+                            <MudIcon Icon="@Icons.Material.Filled.Refresh" Class="mr-2" />
+                            Regenerate Meals
+                        </MudButton>
+                    </MudItem>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ViewGroceryList">
-                        <MudIcon Icon="shopping_cart" Class="mr-2" />
+                        <MudIcon Icon="@Icons.Material.Filled.List" Class="mr-2" />
                         View Grocery List
                     </MudButton>
                 </MudContainer>
 
                 @if (isRegeneratingMealPlan)
                 {
-                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-                    <MudText Typo="Typo.body1" Class="mt-2">Replacing meal...</MudText>
+                    
+                    <MudText Typo="Typo.h6" Class="d-flex align-center justify-center">
+                        <MudIcon Icon="@Icons.Material.Filled.AutoFixHigh"></MudIcon>
+                        Hang Tight! We’re plating up your personalized recipes...
+                    </MudText>
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
                 }
                 else
                 {
-                    @foreach (var recipe in weeklyPlan)
+                    @foreach (var recipe in weeklyPlan.Recipes)
                     {
-                        <MudContainer Class="mb-8 recipe-container">
-                            <MudPaper Class="p-4 mb-4">
-                                <MudGrid Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-                                    <MudItem xs="8">
-                                        <MudText Typo="Typo.h6">@recipe.Name</MudText>
-                                        <MudText Typo="Typo.body1" Class="mt-1">@string.Join(", ", recipe.Ingredients)</MudText>
+                        <MudContainer Class="mb-8 recipe-container max-w-screen-md mx-auto">
+                            <MudPaper Elevation="0" Class="pa-4 rounded-lg shadow-sm border border-gray-500">
+                                <!-- Recipe Name and Prep Time (Top Section) -->
+                                <MudGrid>
+                                    <MudItem xs="9">
+                                        <MudText Typo="Typo.h6" Class="font-weight-bold">@recipe.Recipe.Name</MudText>
                                     </MudItem>
-                                    <MudItem xs="4" Class="text-right">
-                                        <MudText Typo="Typo.h3" Class="p-2 bg-primary-light text-white" Align="Align.Center">@recipe.PrepTime</MudText>
-                                    </MudItem>
-                                </MudGrid>
-
-                                <MudGrid Class="mt-2">
-                                    <MudItem xs="12">
-                                        <MudText Typo="Typo.caption" Class="text-gray-500">Calories: @recipe.Calories</MudText>
+                                    <MudItem xs="3" Class="d-flex justify-end align-center">
+                                        <MudText Typo="Typo.h5" Class="font-weight-bold pa-2 rounded">@recipe.Recipe.PrepTime</MudText>
                                     </MudItem>
                                 </MudGrid>
 
-                                <!-- Actions: Like, Dislike, and View Recipe at the bottom -->
-                                <MudContainer Class="mt-4 flex justify-between items-center">
-                                    <MudContainer Class="flex space-x-2">
-                                        <!-- Like and Dislike buttons -->
-                                        <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Primary" OnClick="() => LikeRecipe(recipe)" Class="mr-2" />
-                                        <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" Color="Color.Primary" OnClick="() => DislikeRecipe(recipe)" />
-                                    </MudContainer>
-                                    <MudContainer Class="text-left">
-                                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ViewRecipe(recipe)">
-                                            View Recipe
-                                            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="ml-1" />
+                                <!-- Calories Information -->
+                                <MudText Typo="Typo.caption" Class="mt-2 text-gray">Calories: @recipe.Recipe.Calories</MudText>
+
+                                <!-- Ingredients -->
+                                <MudText Typo="Typo.body2" Class="mt-4">
+                                    @string.Join(", ", recipe.Recipe.Ingredients)
+                                </MudText>
+
+                                <!-- Thumbs Up/Down and View Recipe Section (Bottom Section) -->
+                                <MudGrid Class="mt-4 align-center">
+                                    <MudItem xs="6" Class="d-flex">
+                                        <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Info" Size="Size.Small" Class="icon-hover-warning" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" Color="Color.Info" Size="Size.Small" Class="ml-2 icon-hover-warning" OnClick="() => ConfirmDislikeRecipe(recipe.Recipe)" />
+                                    </MudItem>
+                                    <MudItem xs="6" Class="d-flex justify-end">
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" OnClick="() => ViewRecipe(recipe.Recipe)">
+                                            VIEW RECIPE
                                         </MudButton>
-                                    </MudContainer>
-                                </MudContainer>
+                                    </MudItem>
+                                </MudGrid>
                             </MudPaper>
                         </MudContainer>
                     }
@@ -100,10 +96,11 @@
     private bool _isDarkMode;
     [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
 
+    private DateTime mealPlanStartDate;
     private bool isAuthenticated;
     private bool isLoading = true;
     private bool isRegeneratingMealPlan = false;
-    private List<Recipe> weeklyPlan = new List<Recipe>();
+    private MealPlan weeklyPlan = new MealPlan();
 
     private async Task SignInWithGoogle()
     {
@@ -136,6 +133,7 @@
                 if (email != null)
                 {
                     weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(email);
+                    mealPlanStartDate = weeklyPlan.WeekStartDate;
                 }
             }
         }
@@ -157,6 +155,7 @@
     private async Task RegeneratePlan()
     {
         isRegeneratingMealPlan = true;
+        StateHasChanged();
 
         try
         {
@@ -186,6 +185,8 @@
         //want hot/cold, spicy/sweet? etc
 
         isRegeneratingMealPlan = true;
+        StateHasChanged();
+
         try
         {
             var (email, userPreferences) = await GetUserEmailAndPreferences();
@@ -195,11 +196,40 @@
         }
         catch (InvalidOperationException ex)
         {
-            // Handle the exception (e.g., show a message to the user)
+            Console.WriteLine(ex.Message);
         }
         finally
         {
             isRegeneratingMealPlan = false;
+        }
+    }
+
+    private async Task ConfirmRegeneratePlan()
+    {
+        var parameters = new DialogParameters { ["Message"] = "Out with the old, in with the new! \n Do you want us to regenerate your personalized recipes for the week of " + weeklyPlan.WeekStartDate.ToString("MMMM dd, yyyy") + "?" };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = DialogService.Show<ConfirmationDialog>("Confirm", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && result.Canceled == false)
+        {
+            await RegeneratePlan();
+        }
+    }
+
+    private async Task ConfirmDislikeRecipe(Recipe recipe)
+    {
+        //Ask user anything we should change?
+        //want hot/cold, spicy/sweet? etc
+
+        var parameters = new DialogParameters { ["Message"] = "Are you sure you want to remove this recipe and build a new one?" };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = DialogService.Show<ConfirmationDialog>("Confirm", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && result.Canceled == false)
+        {
+            await DislikeRecipe(recipe);
         }
     }
 

@@ -1,0 +1,16 @@
+﻿@inherits ComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6">@Message</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => MudDialogInstance.Close(DialogResult.Ok(true))">Yes</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => MudDialogInstance.Close(DialogResult.Cancel())">No</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialogInstance { get; set; }
+    [Parameter] public string Message { get; set; }
+}
