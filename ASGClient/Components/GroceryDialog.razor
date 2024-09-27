@@ -1,6 +1,7 @@
-﻿@namespace ASGClient.Components
-@using MudBlazor
+﻿@using ASGShared.Models
+@inject MudBlazor.IDialogService DialogService
 @inject IJSRuntime JsRuntime
+@using MudBlazor
 
 <MudDialog>
     <DialogContent>
@@ -16,7 +17,7 @@
             <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Class="mr-2" />
             Copy List
         </MudButton>
-        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="CloseDialog">Close</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Dark" OnClick="CloseDialog">Close</MudButton>
     </DialogActions>
 </MudDialog>
 

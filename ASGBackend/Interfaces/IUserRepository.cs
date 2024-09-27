@@ -4,8 +4,8 @@ namespace ASGBackend.Interfaces
 {
     public interface IUserRepository
     {
-        Task<User> GetUserWithPreferences(string userId);
-        Task AddRecipeRating(string userId, int recipeId, bool isLiked);
+        Task<User> GetUserWithPreferences(Guid userId);
+        Task AddRecipeRating(Guid userId, int recipeId, bool isLiked);
     }
 }
 

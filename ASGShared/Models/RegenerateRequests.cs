@@ -7,7 +7,7 @@
 
     public class RegenerateMealPlanRequest
     {
-        public string Email { get; set; }
+        public Guid UserId { get; set; }
         public UserPreferences UserPreferences { get; set; }
     }
 }

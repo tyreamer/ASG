@@ -11,39 +11,56 @@ namespace ASG.Services
     {
         private readonly ILocalStorageService _localStorage;
         private readonly IJSRuntime _jsRuntime;
+        private readonly UserClientService _userClientService;
 
-        public ASGAuthenticationStateProvider(ILocalStorageService localStorage, IJSRuntime jsRuntime)
+        public ASGAuthenticationStateProvider(ILocalStorageService localStorage, IJSRuntime jsRuntime, UserClientService userClientService)
         {
             _localStorage = localStorage;
             _jsRuntime = jsRuntime;
+            _userClientService = userClientService;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             try
             {
-                var user = await _localStorage.GetItemAsync<FirebaseUser>("ASGUser");
-                if (user == null)
+                var firebaseUser = await _localStorage.GetItemAsync<FirebaseUser>("ASGUser");
+                if (firebaseUser == null)
                 {
                     Console.WriteLine("No user found in local storage.");
                     return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
                 }
 
-                if (string.IsNullOrEmpty(user.DisplayName) || string.IsNullOrEmpty(user.Email) || user.StsTokenManager == null)
+                if (string.IsNullOrEmpty(firebaseUser.DisplayName) || string.IsNullOrEmpty(firebaseUser.Email) || firebaseUser.StsTokenManager == null)
                 {
                     Console.WriteLine("User data is missing required fields.");
                     return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
                 }
 
-                Console.WriteLine($"User Found: {user.DisplayName}");
+                Console.WriteLine($"User Found in local storage: {firebaseUser.DisplayName}");
 
-                var identity = new ClaimsIdentity(new[]
+
+                //fill out the claims we can...if this is a new user we may not have an id yet
+                var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Name, user.DisplayName),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim("Token", user.StsTokenManager.AccessToken)
-                }, "firebaseAuth");
+                    new Claim(ClaimTypes.Name, firebaseUser.DisplayName),
+                    new Claim(ClaimTypes.Email, firebaseUser.Email),
+                    new Claim("Token", firebaseUser.StsTokenManager.AccessToken)
+                };
 
+                // Retrieve the user from the database to get the GUID
+                var user = await _userClientService.GetUserByEmailAsync(firebaseUser.Email);
+                if (user == null)
+                {
+                    Console.WriteLine("User not found in the database.");
+                }
+                else
+                {
+                    //This is a registered user
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString() ?? null));
+                }
+
+                var identity = new ClaimsIdentity(claims, "firebaseAuth");
                 var claimsPrincipal = new ClaimsPrincipal(identity);
                 return new AuthenticationState(claimsPrincipal);
             }
@@ -54,7 +71,8 @@ namespace ASG.Services
             }
         }
 
-        public async Task<User> MarkUserAsAuthenticated(FirebaseUser firebaseUser)
+
+        public async Task<bool> UserIsAuthenticated(FirebaseUser firebaseUser)
         {
             if (firebaseUser == null)
             {
@@ -69,11 +87,20 @@ namespace ASG.Services
             // Store the user in local storage
             await _localStorage.SetItemAsync("ASGUser", firebaseUser);
 
+            // Retrieve the user from the database to get the GUID
+            var user = await _userClientService.GetUserByEmailAsync(firebaseUser.Email);
+
+            if (user == null)
+            {
+                return false;
+            }
+
             var claims = new List<Claim>
             {
-                new (ClaimTypes.Name, firebaseUser.DisplayName),
-                new (ClaimTypes.Email, firebaseUser.Email),
-                new ("Token", firebaseUser.StsTokenManager.AccessToken)
+                new Claim(ClaimTypes.Name, firebaseUser.DisplayName),
+                new Claim(ClaimTypes.Email, firebaseUser.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), // Add the GUID to the claims
+                new Claim("Token", firebaseUser.StsTokenManager.AccessToken)
             };
 
             var identity = new ClaimsIdentity(claims, "firebaseAuth");
@@ -81,8 +108,7 @@ namespace ASG.Services
 
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(userPrincipal)));
 
-            // Convert FirebaseUser to User and return
-            return ConvertFirebaseUserToUser(firebaseUser);
+            return true;
         }
 
         public async Task MarkUserAsLoggedOut()
@@ -97,7 +123,7 @@ namespace ASG.Services
         {
             return new User
             {
-                Id = firebaseUser.Uid,
+                //DB will set ID
                 DisplayName = firebaseUser.DisplayName,
                 Email = firebaseUser.Email,
                 IsAuthenticated = true,

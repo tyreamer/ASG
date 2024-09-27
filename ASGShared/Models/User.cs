@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ASGShared.Models
@@ -10,13 +11,19 @@ namespace ASGShared.Models
         [NotMapped]
         public Dictionary<string, string> Claims { get; set; } = new Dictionary<string, string>();
 
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public Guid Id { get; set; }
+
+        [Required]
+        [EmailAddress]
         public string Email { get; set; } = string.Empty;
+
+        public string Name { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
         public Budget BudgetPerMeal { get; set; } = new Budget();
         public int HouseholdSize { get; set; } = 1;
-        public UserPreferences Preferences { get; set; } = new UserPreferences();
+        public UserPreferences? Preferences { get; set; }
 
         private int _cookingSkillLevel = 1;
         public int CookingSkillLevel

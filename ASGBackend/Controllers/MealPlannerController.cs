@@ -32,11 +32,11 @@ namespace ASGBackend.Controllers
         }
 
         [HttpGet("weekly")]
-        public async Task<ActionResult<MealPlan>> GetWeeklyPlan([FromQuery] string email)
+        public async Task<ActionResult<MealPlan>> GetWeeklyPlan([FromQuery] Guid userId)
         {
             try
             {
-                var weeklyPlan = await _mealPlanService.GetWeeklyPlan(email);
+                var weeklyPlan = await _mealPlanService.GetWeeklyPlan(userId);
                 return Ok(weeklyPlan);
             }
             catch (Exception ex)
@@ -46,17 +46,17 @@ namespace ASGBackend.Controllers
             }
         }
 
-        [HttpPost("{email}/recipes/{recipeId}/replace")]
-        public async Task<IActionResult> ReplaceRecipe([FromBody] GenerateRecipeRequest request, string email, int recipeId)
+        [HttpPost("{userId}/recipes/{recipeId}/replace")]
+        public async Task<IActionResult> ReplaceRecipe([FromBody] GenerateRecipeRequest request, Guid userId, int recipeId)
         {
-            if (request == null || request.UserPreferences == null || recipeId <= 0 || string.IsNullOrWhiteSpace(email))
+            if (request == null || request.UserPreferences == null || recipeId <= 0 || userId == Guid.NewGuid())
             {
                 return BadRequest("Invalid request data.");
             }
 
             try
             {
-                var newRecipe = await _mealPlanService.ReplaceRecipeAsync(email, recipeId, request.UserPreferences);
+                var newRecipe = await _mealPlanService.ReplaceRecipeAsync(userId, recipeId, request.UserPreferences);
                 return Ok(newRecipe);
             }
             catch (Exception ex)
@@ -89,14 +89,14 @@ namespace ASGBackend.Controllers
         [HttpPost("regenerate/mealplan")]
         public async Task<IActionResult> RegenerateMealPlan([FromBody] RegenerateMealPlanRequest request)
         {
-            if (request == null || string.IsNullOrEmpty(request.Email) || request.UserPreferences == null)
+            if (request == null || request.UserId == Guid.NewGuid() || request.UserPreferences == null)
             {
                 return BadRequest("Invalid request data.");
             }
 
             try
             {
-                var newMealPlan = await _mealPlanService.RegenerateMealPlanAsync(request.Email, request.UserPreferences);
+                var newMealPlan = await _mealPlanService.RegenerateMealPlanAsync(request.UserId, request.UserPreferences);
                 return Ok(newMealPlan);
             }
             catch (Exception ex)

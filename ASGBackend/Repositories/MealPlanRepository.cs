@@ -15,7 +15,7 @@ namespace ASGBackend.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<MealPlan?> GetMealPlanByUserIdAsync(string userId)
+        public async Task<MealPlan?> GetMealPlanByUserIdAsync(Guid userId)
         {
             return await _dbContext.MealPlans
                 .Include(mp => mp.Recipes)
@@ -23,7 +23,7 @@ namespace ASGBackend.Repositories
                 .FirstOrDefaultAsync(mp => mp.UserId == userId);
         }
 
-        public async Task<MealPlan?> GetMealPlan(string userId, DateTime weekStartDate)
+        public async Task<MealPlan?> GetMealPlan(Guid userId, DateTime weekStartDate)
         {
             return await _dbContext.MealPlans
                 .Include(mp => mp.Recipes)

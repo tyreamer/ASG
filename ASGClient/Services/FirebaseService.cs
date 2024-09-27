@@ -67,7 +67,7 @@ namespace ASG.Services
             await _localStorage.SetItemAsync("ASGUser", firebaseUser);
 
             var customAuthStateProvider = (ASGAuthenticationStateProvider)_authStateProvider;
-            await customAuthStateProvider.MarkUserAsAuthenticated(firebaseUser);
+            await customAuthStateProvider.UserIsAuthenticated(firebaseUser);
 
             return firebaseUser;
         }

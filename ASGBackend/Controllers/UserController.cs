@@ -16,11 +16,7 @@ namespace ASGBackend.Controllers
         private readonly ILogger<UserController> _logger;
         private readonly UserService _userService;
 
-        public UserController(
-            AIAgentService aiAgentService,
-            IUserRepository userRepository,
-            ILogger<UserController> logger,
-            UserService userService)
+        public UserController(AIAgentService aiAgentService, IUserRepository userRepository, ILogger<UserController> logger, UserService userService)
         {
             _aiAgentService = aiAgentService;
             _userRepository = userRepository;
@@ -31,6 +27,11 @@ namespace ASGBackend.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] User user)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var createdUser = await _userService.CreateUserAsync(user);
@@ -43,12 +44,12 @@ namespace ASGBackend.Controllers
             }
         }
 
-        [HttpGet("{email}")]
-        public async Task<IActionResult> GetUser(string email)
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetUser(Guid userId)
         {
             try
             {
-                var user = await _userService.GetUserByEmailAsync(email);
+                var user = await _userService.GetUserAsync(userId);
                 if (user == null)
                 {
                     return NotFound();
@@ -63,13 +64,28 @@ namespace ASGBackend.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetUserByEmail([FromQuery] string email)
+        {
+            var user = await _userService.GetUserByEmailAsync(email);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(user);
+        }
+
         [HttpGet("registered/{email}")]
-        public async Task<IActionResult> UserFullyRegistered(string email)
+        public async Task<IActionResult> EmailFullyRegistered(string email)
         {
             try
             {
                 _logger.LogInformation($"Checking if user with email: {email} is fully registered");
+
                 var user = await _userService.GetUserByEmailAsync(email);
+
                 if (user == null)
                 {
                     _logger.LogWarning($"User with email {email} not found");
@@ -87,7 +103,7 @@ namespace ASGBackend.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(string id, [FromBody] User updatedUser)
+        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] User updatedUser)
         {
             try
             {
@@ -107,7 +123,7 @@ namespace ASGBackend.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(string id)
+        public async Task<IActionResult> DeleteUser(Guid id)
         {
             try
             {
@@ -126,22 +142,28 @@ namespace ASGBackend.Controllers
             }
         }
 
-        [HttpGet("{email}/preferences")]
-        public async Task<IActionResult> GetUserPreferences(string email)
+        [HttpGet("{userId}/preferences")]
+        public async Task<IActionResult> GetUserPreferences(Guid userId)
         {
-            // Fetch user preferences based on email
-            var user = await _userService.GetUserByEmailAsync(email);
-            UserPreferences userPreferences;
-            if (user == null)
+            var preferences = await _userService.GetUserPreferencesAsync(userId);
+
+            if (preferences == null)
             {
                 return NotFound();
             }
-            else
-            {
-                userPreferences = user.Preferences;
-            }
 
-            return Ok(userPreferences);
+            return Ok(preferences);
+        }
+
+        [HttpPut("{userId}/preferences")]
+        public async Task<IActionResult> UpdateUserPreferences(Guid userId, [FromBody] UserPreferences updatedPreferences)
+        {
+            var result = await _userService.UpdateUserPreferencesAsync(userId, updatedPreferences);
+            if (result == null)
+            {
+                return NotFound();
+            }
+            return Ok(result);
         }
     }
 }
