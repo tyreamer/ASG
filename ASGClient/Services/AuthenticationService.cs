@@ -23,15 +23,23 @@ namespace ASG.Services
             _userClientService = userClientService;
         }
 
-        public async Task<User?> SignInWithGoogleAsync()
+        public async Task SignInWithGoogleAsync()
         {
             var firebaseUser = await _firebaseService.SignInWithGoogleAsync();
             if (firebaseUser != null)
             {
-                return await _authStateProvider.MarkUserAsAuthenticated(firebaseUser);
-            }
+                var isAuthenticated = await _authStateProvider.UserIsAuthenticated(firebaseUser);
+                if (isAuthenticated)
+                {
+                    var isRegistered = await _userClientService.IsEmailRegisteredAsync(firebaseUser.Email);
+                    if (isRegistered)
+                    {
+                        _navigation.Refresh();
+                    }
+                }
 
-            return null;
+                _navigation.NavigateTo($"/signup?name={Uri.EscapeDataString(firebaseUser.DisplayName)}&email={Uri.EscapeDataString(firebaseUser.Email)}");
+            }
         }
 
         public async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -81,11 +89,9 @@ namespace ASG.Services
             if (userClaims.Identity != null && userClaims.Identity.IsAuthenticated)
             {
                 var email = userClaims.FindFirst(c => c.Type == ClaimTypes.Email)?.Value;
-                var isRegistered = await _userClientService.IsUserRegisteredAsync(email);
-                if (!isRegistered)
+                if (string.IsNullOrEmpty(email) || !await _userClientService.IsEmailRegisteredAsync(email))
                 {
                     _navigation.NavigateTo("/signup");
-                    return;
                 }
             }
             else
@@ -96,7 +102,7 @@ namespace ASG.Services
 
         public async Task<bool> IsUserRegisteredAsync(string email)
         {
-            return await _userClientService.IsUserRegisteredAsync(email);
+            return await _userClientService.IsEmailRegisteredAsync(email);
         }
 
         public async Task LogoutAsync()

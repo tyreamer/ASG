@@ -25,6 +25,7 @@ namespace ASGBackend.Services
             {
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
+
                 return user;
             }
             catch (Exception ex)
@@ -34,17 +35,19 @@ namespace ASGBackend.Services
             }
         }
 
-        public async Task<User> GetUserByEmailAsync(string email)
+        public async Task<User> GetUserAsync(Guid userId)
         {
             try
             {
-                _logger.LogInformation($"Fetching user with email: {email}");
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == email);
+                _logger.LogInformation($"Fetching user with id: {userId}");
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
                 if (user == null)
                 {
-                    _logger.LogWarning($"User with email {email} not found");
+                    _logger.LogWarning($"User {userId} not found");
                 }
+
                 return user;
             }
             catch (Exception ex)
@@ -54,31 +57,47 @@ namespace ASGBackend.Services
             }
         }
 
-        public async Task<User> UpdateUserAsync(string id, User updatedUser)
+        public async Task<User> GetUserByEmailAsync(string email)
         {
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+                _logger.LogInformation($"Fetching user with email: {email}");
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
                 if (user == null)
                 {
-                    return null;
+                    _logger.LogWarning($"User with email {email} not found");
                 }
 
-                user.Name = updatedUser.Name;
-                user.Email = updatedUser.Email;
-                // Update other properties as needed
-
-                await _context.SaveChangesAsync();
                 return user;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating user");
+                _logger.LogError(ex, "Error getting user");
                 throw;
             }
         }
 
-        public async Task<bool> DeleteUserAsync(string id)
+        public async Task<User?> UpdateUserAsync(Guid id, User updatedUser)
+        {
+            var user = await _context.Users.Include(u => u.Preferences)
+                                           .FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+            {
+                return null;
+            }
+
+            user.BudgetPerMeal = updatedUser.BudgetPerMeal;
+            user.HouseholdSize = updatedUser.HouseholdSize;
+            user.CookingSkillLevel = updatedUser.CookingSkillLevel;
+            user.Preferences = updatedUser.Preferences;
+
+            await _context.SaveChangesAsync();
+            return user;
+        }
+
+        public async Task<bool> DeleteUserAsync(Guid id)
         {
             try
             {
@@ -99,12 +118,13 @@ namespace ASGBackend.Services
             }
         }
 
-        public async Task<bool> ValidateFullyRegistered(string id)
+        public async Task<bool> ValidateFullyRegistered(Guid id)
         {
             try
             {
                 _logger.LogInformation($"Validating if user with id: {id} is fully registered");
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+
                 if (user == null)
                 {
                     _logger.LogWarning($"User with id {id} not found");
@@ -128,6 +148,66 @@ namespace ASGBackend.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error validating if user is fully registered");
+                throw;
+            }
+        }
+
+        public async Task<UserPreferences?> GetUserPreferencesAsync(Guid userId)
+        {
+            try
+            {
+                var user = await _context.Users.Include(u => u.Preferences)
+                                               .FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user == null || user.Preferences == null)
+                {
+                    _logger.LogWarning($"User or preferences for user {userId} not found");
+                    return null;
+                }
+
+                return user.Preferences;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user preferences");
+                throw;
+            }
+        }
+
+        public async Task<UserPreferences> UpdateUserPreferencesAsync(Guid id, UserPreferences updatedPreferences)
+        {
+            try
+            {
+                var user = await _context.Users.Include(u => u.Preferences)
+                                               .FirstOrDefaultAsync(u => u.Id == id);
+
+                if (user == null || updatedPreferences == null)
+                {
+                    //we shouldn't be here...but just in case
+                    return null;
+                }
+
+                if (user.Preferences == null)
+                {
+                    //new sign-up
+                    user.Preferences = new UserPreferences();
+                }
+
+                user.Preferences.UserId = user.Id;
+                user.Preferences.TotalMealsPerWeek = updatedPreferences.TotalMealsPerWeek;
+                user.Preferences.DietaryRestrictions = updatedPreferences.DietaryRestrictions;
+                user.Preferences.Allergies = updatedPreferences.Allergies;
+                user.Preferences.FavoriteCuisines = updatedPreferences.FavoriteCuisines;
+                user.Preferences.DislikedFoods = updatedPreferences.DislikedFoods;
+                user.Preferences.NutritionalGoals = updatedPreferences.NutritionalGoals;
+                user.Preferences.CalorieTarget = updatedPreferences.CalorieTarget;
+
+                await _context.SaveChangesAsync();
+                return user.Preferences;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user preferences");
                 throw;
             }
         }

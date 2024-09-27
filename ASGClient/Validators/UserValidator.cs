@@ -29,7 +29,9 @@ public class UserValidator : AbstractValidator<User>
     {
         var result = await ValidateAsync(ValidationContext<User>.CreateWithOptions((User)model, x => x.IncludeProperties(propertyName)));
         if (result.IsValid)
+        {
             return Array.Empty<string>();
+        }
         return result.Errors.Select(e => e.ErrorMessage);
     };
 }

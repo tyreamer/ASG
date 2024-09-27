@@ -1,0 +1,44 @@
+﻿@using ASGShared.Models
+@using MudBlazor
+
+@code {
+    [Parameter] public List<MealPlanRecipe> Recipes { get; set; }
+    [Parameter] public DateTime MealPlanStartDate { get; set; }
+    [Parameter] public EventCallback OnRegeneratePlan { get; set; }
+    [Parameter] public EventCallback<Recipe> OnViewRecipe { get; set; }
+    [Parameter] public EventCallback<Recipe> OnDislikeRecipe { get; set; }
+}
+
+@foreach (var recipe in Recipes)
+{
+    <MudContainer Class="mb-8 recipe-container max-w-screen-md mx-auto">
+        <MudPaper Elevation="0" Class="pa-4 rounded-lg shadow-sm border border-gray-500">
+            <MudGrid>
+                <MudItem xs="9">
+                    <MudText Typo="Typo.h6" Class="font-weight-bold">@recipe.Recipe.Name</MudText>
+                </MudItem>
+                <MudItem xs="3" Class="d-flex justify-end align-center">
+                    <MudText Typo="Typo.h5" Class="font-weight-bold pa-2 rounded">@recipe.Recipe.PrepTime</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <MudText Typo="Typo.caption" Class="mt-2 text-gray">Calories: @recipe.Recipe.Calories</MudText>
+
+            <MudText Typo="Typo.body2" Class="mt-4">
+                @string.Join(", ", recipe.Recipe.Ingredients)
+            </MudText>
+
+            <MudGrid Class="mt-4 align-center">
+                <MudItem xs="6" Class="d-flex">
+                    <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Info" Size="Size.Small" Class="icon-hover-warning" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" Color="Color.Info" Size="Size.Small" Class="ml-2 icon-hover-warning" OnClick="() => OnDislikeRecipe.InvokeAsync(recipe.Recipe)" />
+                </MudItem>
+                <MudItem xs="6" Class="d-flex justify-end">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" OnClick="() => OnViewRecipe.InvokeAsync(recipe.Recipe)">
+                        VIEW RECIPE
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudContainer>
+}

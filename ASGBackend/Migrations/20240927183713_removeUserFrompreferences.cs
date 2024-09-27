@@ -5,7 +5,7 @@
 namespace ASGBackend.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateRecipe : Migration
+    public partial class removeUserFrompreferences : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

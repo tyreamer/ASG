@@ -27,13 +27,13 @@ namespace ASG.Services
             _mealPlanRepository = mealPlanRepository;
         }
 
-        public async Task<MealPlan> GetWeeklyPlan(string email, DateTime? weekStarted = null)
+        public async Task<MealPlan> GetWeeklyPlan(Guid userId, DateTime? weekStarted = null)
         {
             try
             {
                 //TODO: add week start in the query
                 var weekStartDate = weekStarted ?? DateTime.Now;
-                var mealPlan = await _mealPlanRepository.GetMealPlan(email, weekStartDate.StartOfWeek(DayOfWeek.Sunday));
+                var mealPlan = await _mealPlanRepository.GetMealPlan(userId, weekStartDate.StartOfWeek(DayOfWeek.Sunday));
 
                 if (mealPlan != null)
                 {
@@ -50,12 +50,12 @@ namespace ASG.Services
             }
         }
 
-        public async Task<MealPlanRecipe> ReplaceRecipeAsync(string email, int recipeId, UserPreferences userPreferences)
+        public async Task<MealPlanRecipe> ReplaceRecipeAsync(Guid userId, int recipeId, UserPreferences userPreferences)
         {
             try
             {
                 // Get the user's meal plan
-                var mealPlan = await _mealPlanRepository.GetMealPlanByUserIdAsync(email);
+                var mealPlan = await _mealPlanRepository.GetMealPlanByUserIdAsync(userId);
                 if (mealPlan == null)
                 {
                     throw new Exception("Meal plan not found.");
@@ -92,7 +92,7 @@ namespace ASG.Services
                 // Save the updated meal plan
                 await _mealPlanRepository.UpdateMealPlanAsync(mealPlan);
 
-                _logger.LogInformation($"Replaced recipe {recipeId} with new recipe {newRecipe.Id} for user {email}");
+                _logger.LogInformation($"Replaced recipe {recipeId} with new recipe {newRecipe.Id} for user {userId}");
                 return mealPlanRecipe;
             }
             catch (Exception ex)
@@ -111,9 +111,6 @@ namespace ASG.Services
                 var prompt = promptCreator.CreateRecipePrompt(userPreferences, otherRecipesInMealPlan ?? new List<string>());
 
                 var newRecipeContent = await _geminiService.GenerateRecipe(prompt);
-
-                // Log the new recipe content for debugging
-                _logger.LogInformation("New recipe content: {NewRecipeContent}", newRecipeContent);
 
                 // Check if the content is JSON or plain text
                 if (!IsJson(newRecipeContent))
@@ -177,19 +174,33 @@ namespace ASG.Services
             return JsonSerializer.Serialize(jsonObject);
         }
 
-        public async Task<MealPlan> RegenerateMealPlanAsync(string email, UserPreferences userPreferences)
+        public async Task<MealPlan> RegenerateMealPlanAsync(Guid userId, UserPreferences userPreferences, DateTime? weekStarted = null)
         {
-            var mealPlan = await _mealPlanRepository.GetMealPlanByUserIdAsync(email);
-            if (mealPlan != null)
+            var weekStartDate = weekStarted ?? DateTime.Now.StartOfWeek(DayOfWeek.Sunday);
+            var mealPlan = await _mealPlanRepository.GetMealPlan(userId, weekStartDate);
+
+            if (mealPlan != null && mealPlan.Recipes?.Count > 0)
             {
                 mealPlan.Recipes.Clear();
                 await _mealPlanRepository.SaveChangesAsync();
-
-                // Generate new recipes for the meal plan
-                var newRecipes = await GenerateWeeklyRecipes(userPreferences);
-                mealPlan.Recipes.AddRange(newRecipes);
-                await _mealPlanRepository.SaveChangesAsync();
             }
+            else
+            {
+                // No meal plan for this week yet, create a new one
+                mealPlan = new MealPlan
+                {
+                    UserId = userId,
+                    WeekStartDate = weekStartDate
+                };
+
+                // Add the new meal plan to the repository
+                await _mealPlanRepository.AddMealPlanAsync(mealPlan);
+            }
+
+            // Generate new recipes for the meal plan
+            var newRecipes = await GenerateWeeklyRecipes(userPreferences);
+            mealPlan.Recipes = newRecipes;
+            await _mealPlanRepository.SaveChangesAsync();
 
             return mealPlan;
         }

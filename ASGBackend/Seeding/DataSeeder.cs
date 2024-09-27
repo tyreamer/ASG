@@ -32,12 +32,12 @@ public static class DataSeeder
             {
                 new MealPlan
                 {
-                    UserId = "tyreamer@gmail.com",
+                    UserId = new Guid(),
                     Recipes = new List<MealPlanRecipe>
                     {
-                        new MealPlanRecipe { RecipeId = 1, DayOfWeek = 1, /*MealType = "Breakfast"*/ },
-                        new MealPlanRecipe { RecipeId = 2, DayOfWeek = 1, /*MealType = "Lunch"*/ },
-                        new MealPlanRecipe { RecipeId = 3, DayOfWeek = 1, /*MealType = "Dinner"*/ }
+                        new MealPlanRecipe { RecipeId = 1},
+                        new MealPlanRecipe { RecipeId = 2},
+                        new MealPlanRecipe { RecipeId = 3}
                     }
                 }
             };

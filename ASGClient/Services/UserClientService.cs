@@ -1,70 +1,116 @@
 using ASGShared.Models;
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
 
-namespace ASG.Services
+public class UserClientService
 {
-    public class UserClientService
+    private readonly HttpClient _httpClient;
+
+    public UserClientService(HttpClient httpClient)
     {
-        private readonly HttpClient _httpClient;
+        _httpClient = httpClient;
+    }
 
-        public UserClientService(HttpClient httpClient)
+    public async Task<bool> IsEmailRegisteredAsync(string email)
+    {
+        var response = await _httpClient.GetAsync($"api/users/registered/{email}");
+
+        if (response.IsSuccessStatusCode)
         {
-            _httpClient = httpClient;
+            return await response.Content.ReadFromJsonAsync<bool>();
         }
 
-        public async Task<bool> IsUserRegisteredAsync(string email)
+        return false;
+    }
+
+    public async Task<User?> GetUserAsync(Guid userId)
+    {
+        var response = await _httpClient.GetAsync($"api/users/{userId}");
+
+        if (response.IsSuccessStatusCode)
         {
-            var response = await _httpClient.GetAsync($"api/users/registered/{email}");
-            if (response.IsSuccessStatusCode)
+            return await response.Content.ReadFromJsonAsync<User>();
+        }
+
+        return null;
+    }
+
+    public async Task<User?> GetUserByEmailAsync(string email)
+    {
+        var response = await _httpClient.GetAsync($"api/users?email={email}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<User>();
+        }
+
+        return null;
+    }
+
+    public async Task<User?> CreateUserAsync(User user)
+    {
+        // Create the user
+        var response = await _httpClient.PostAsJsonAsync("api/users", user);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var createdUser = await response.Content.ReadFromJsonAsync<User>();
+
+            // Update the Preferences with the created user
+            if (createdUser != null && user.Preferences == null)
             {
-                return await response.Content.ReadFromJsonAsync<bool>();
+                var preferences = new UserPreferences();
+                preferences.UserId = createdUser.Id;
+
+                // Update the user with preferences
+                var updateResponse = await _httpClient.PutAsJsonAsync($"api/users/{createdUser.Id}/preferences", preferences);
+                if (updateResponse.IsSuccessStatusCode)
+                {
+                    createdUser.Preferences = await updateResponse.Content.ReadFromJsonAsync<UserPreferences>();
+                    return createdUser;
+                }
             }
-            return false;
+
+            return createdUser;
+        }
+        else
+        {
+            // Log the response for debugging
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error: {response.StatusCode}, Content: {errorContent}");
         }
 
-        public async Task<User?> GetUserAsync(string email)
-        {
-            var response = await _httpClient.GetAsync($"api/users/{email}");
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<User>();
-            }
-            return null;
-        }
+        return null;
+    }
 
-        public async Task<User?> CreateUserAsync(User user)
+    public async Task<User?> UpdateUserAsync(Guid userId, User updatedUser)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/users/{userId}", updatedUser);
+        if (response.IsSuccessStatusCode)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/users", user);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<User>();
-            }
-            return null;
+            return await response.Content.ReadFromJsonAsync<User>();
         }
+        return null;
+    }
 
-        public async Task<User?> UpdateUserAsync(string id, User updatedUser)
-        {
-            var response = await _httpClient.PutAsJsonAsync($"api/users/{id}", updatedUser);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<User>();
-            }
-            return null;
-        }
+    public async Task<bool> DeleteUserAsync(Guid userId)
+    {
+        var response = await _httpClient.DeleteAsync($"api/users/{userId}");
+        return response.IsSuccessStatusCode;
+    }
 
-        public async Task<bool> DeleteUserAsync(string id)
-        {
-            var response = await _httpClient.DeleteAsync($"api/users/{id}");
-            return response.IsSuccessStatusCode;
-        }
+    public async Task<UserPreferences> GetUserPreferencesAsync(Guid userId)
+    {
+        var response = await _httpClient.GetAsync($"api/users/{userId}/preferences");
+        return await response.Content.ReadFromJsonAsync<UserPreferences>() ?? new UserPreferences();
+    }
 
-        public async Task<UserPreferences> GetUserPreferencesAsync(string email)
+    public async Task<UserPreferences?> UpdateUserPreferencesAsync(Guid userId, UserPreferences updatedPreferences)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/users/{userId}/preferences", updatedPreferences);
+        if (response.IsSuccessStatusCode)
         {
-            var response = await _httpClient.GetAsync($"api/users/{email}/preferences");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<UserPreferences>() ?? new UserPreferences();
+            return await response.Content.ReadFromJsonAsync<UserPreferences>();
         }
+        return null;
     }
 }
