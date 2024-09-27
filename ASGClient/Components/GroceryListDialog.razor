@@ -1,0 +1,34 @@
+﻿@namespace ASGClient.Components
+@using MudBlazor
+@inject IJSRuntime JsRuntime
+
+<MudDialog>
+    <DialogContent>
+        <MudList T="string">
+            @foreach (var ingredient in Ingredients)
+            {
+                <MudListItem T="string">@ingredient</MudListItem>
+            }
+        </MudList>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CopyToClipboard">
+            <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Class="mr-2" />
+            Copy List
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="CloseDialog">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public List<string> Ingredients { get; set; } = new List<string>();
+
+    private void CloseDialog() => MudDialog.Close();
+
+    private async Task CopyToClipboard()
+    {
+        var ingredientsText = string.Join(", ", Ingredients);
+        await JsRuntime.InvokeVoidAsync("navigator.clipboard.writeText", ingredientsText);
+    }
+}
