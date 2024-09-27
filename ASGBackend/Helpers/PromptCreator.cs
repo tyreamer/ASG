@@ -19,6 +19,7 @@ namespace ASGBackend.Helpers
             var prompt = $"You are a recipe assistant. Based on the following preferences, generate a unique and varied recipe in JSON format:";
             prompt += $" Preferences: {userPreferencesString}.\n";
             prompt += $"The response must be in valid JSON format with the following fields: Name, Ingredients (array of strings), Instructions (array of strings), CuisineType, Calories, PrepTime.";
+            prompt += $"Don't use abbreviations for ingredient units.";
 
             // Emphasize variety and uniqueness if previous recipes exist
             if (previousRecipeTitles?.Count > 0)

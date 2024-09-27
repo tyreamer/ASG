@@ -6,6 +6,7 @@
 @using ASGClient.Components
 @using Microsoft.AspNetCore.Components
 @using MudBlazor
+@using ASGClient.Helpers
 @inject IJSRuntime JsRuntime
 @inject AuthenticationService AuthService
 @inject NavigationManager Navigation
@@ -23,32 +24,31 @@
     {
         <MudContainer Class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <MudContainer Class="px-4 py-6 sm:px-0">
-                <MudContainer Class="flex flex-col items-center mb-6">
-                    <MudText Typo="Typo.h4" Align="Align.Center">Week of @mealPlanStartDate.ToString("MMMM dd, yyyy")</MudText>
+                <br/>
 
-                    <MudItem xs="12" sm="12" Class="flex justify-center mb-2 sm:mb-0">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ConfirmRegeneratePlan">
-                            <MudIcon Icon="@Icons.Material.Filled.Refresh" Class="mr-2" />
-                            Regenerate Meals
-                        </MudButton>
-                    </MudItem>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ViewGroceryList">
-                        <MudIcon Icon="@Icons.Material.Filled.List" Class="mr-2" />
-                        View Grocery List
-                    </MudButton>
-                </MudContainer>
-
-                @if (isRegeneratingMealPlan)
-                {
-                    
+                <br />
+                @if (isRegenerating)
+                {                    
                     <MudText Typo="Typo.h6" Class="d-flex align-center justify-center">
                         <MudIcon Icon="@Icons.Material.Filled.AutoFixHigh"></MudIcon>
                         Hang Tight! We’re plating up your personalized recipes...
                     </MudText>
                     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
                 }
-                else
+                else if(weeklyPlan.Recipes != null)
                 {
+                    <MudContainer Class="flex flex-col items-center mb-6">
+                        <MudText Typo="Typo.h4" Align="Align.Center">Week of @mealPlanStartDate.ToString("MMMM dd, yyyy")</MudText>
+
+                        <!-- Centered Button with width control and flexbox -->
+                        <MudContainer Class="d-flex justify-center w-100 mt-4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-auto" OnClick="OpenGroceryListDialog">
+                                <MudIcon Icon="@Icons.Material.Filled.List" Class="mr-2" />
+                                View Grocery List
+                            </MudButton>
+                        </MudContainer>
+                    </MudContainer>
+
                     @foreach (var recipe in weeklyPlan.Recipes)
                     {
                         <MudContainer Class="mb-8 recipe-container max-w-screen-md mx-auto">
@@ -86,6 +86,28 @@
                             </MudPaper>
                         </MudContainer>
                     }
+                    <MudContainer Class="flex flex-col items-center mb-6">
+                        <MudText Typo="Typo.h6" Align="Align.Center">Not feeling this week’s meals? We can cook up some new suggestions!</MudText>
+
+                        <!-- Centered Regenerate Meals Button using flexbox and width control -->
+                        <MudContainer Class="d-flex justify-center w-100 mt-4">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ConfirmRegeneratePlan" Class="mx-auto">
+                                <MudIcon Icon="@Icons.Material.Filled.Refresh" Class="mr-2" />
+                                Regenerate Meals
+                            </MudButton>
+                        </MudContainer>
+                    </MudContainer>
+
+                }
+                else
+                {
+                    <MudItem xs="12" sm="12" Class="flex justify-center mb-2 sm:mb-0">
+                        <MudText Align="Align.Center">We don't have any meals planned yet! Let's get started with some fresh ideas.</MudText>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="RegeneratePlan">
+                            <MudIcon Icon="@Icons.Material.Filled.AutoFixHigh" Class="mr-2" />
+                            Generate Meals
+                        </MudButton>
+                    </MudItem>
                 }
             </MudContainer>
         </MudContainer>
@@ -99,7 +121,7 @@
     private DateTime mealPlanStartDate;
     private bool isAuthenticated;
     private bool isLoading = true;
-    private bool isRegeneratingMealPlan = false;
+    private bool isRegenerating = false;
     private MealPlan weeklyPlan = new MealPlan();
 
     private async Task SignInWithGoogle()
@@ -154,7 +176,7 @@
 
     private async Task RegeneratePlan()
     {
-        isRegeneratingMealPlan = true;
+        isRegenerating = true;
         StateHasChanged();
 
         try
@@ -170,7 +192,7 @@
         }
         finally
         {
-            isRegeneratingMealPlan = false;
+            isRegenerating = false;
         }
     }
 
@@ -184,7 +206,7 @@
         //Ask user anything we should change?
         //want hot/cold, spicy/sweet? etc
 
-        isRegeneratingMealPlan = true;
+        isRegenerating = true;
         StateHasChanged();
 
         try
@@ -200,13 +222,29 @@
         }
         finally
         {
-            isRegeneratingMealPlan = false;
+            isRegenerating = false;
         }
+    }
+
+    private async Task OpenGroceryListDialog()
+    {
+        var ingredients = weeklyPlan.Recipes
+            .SelectMany(r => r.Recipe.Ingredients)
+            .ToList();
+
+        var ingredientsHelper = new IngredientsHelper();
+        var aggregatedIngredients = ingredientsHelper.ParseIngredients(ingredients)
+            .Select(ingredient => ingredient.ToString())
+            .ToList();
+
+        var parameters = new DialogParameters { ["Ingredients"] = aggregatedIngredients };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        DialogService.Show<GroceryListDialog>("Grocery List", parameters, options);
     }
 
     private async Task ConfirmRegeneratePlan()
     {
-        var parameters = new DialogParameters { ["Message"] = "Out with the old, in with the new! \n Do you want us to regenerate your personalized recipes for the week of " + weeklyPlan.WeekStartDate.ToString("MMMM dd, yyyy") + "?" };
+        var parameters = new DialogParameters { ["Message"] = "Do you want us to regenerate your personalized recipes for the week of " + weeklyPlan.WeekStartDate.ToString("MMMM dd, yyyy") + "?" };
         var options = new DialogOptions { CloseOnEscapeKey = true };
         var dialog = DialogService.Show<ConfirmationDialog>("Confirm", parameters, options);
         var result = await dialog.Result;

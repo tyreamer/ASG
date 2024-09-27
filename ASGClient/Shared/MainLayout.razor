@@ -19,23 +19,48 @@
 
     <!-- Your layout content -->
     <MudLayout>
-        <MudAppBar Elevation="0" Color="Color.Primary">
-            <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                <MudText Typo="Typo.h5">Anything sounds good.</MudText>
-                @if (isLoading)
-                {
-                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-                }
-                else if (!isAuthenticated)
-                {
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SignInWithGoogle">
-                        Sign In with Google
-                    </MudButton>
-                }
-            </MudContainer>
-        </MudAppBar>
+        @if (isAuthenticated)
+        {
+            <MudAppBar Elevation="0" Color="Color.Primary">
+                <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                    <MudText Typo="Typo.h5">anything sounds good</MudText>                                    
+                </MudContainer>
+            </MudAppBar>
+        }
+        else if (isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        }
         <MudMainContent>
-            @Body
+            @if (!isAuthenticated)
+            {
+                <MudContainer Color="Color.Primary" MaxWidth="MaxWidth.Small" Class="d-flex flex-column align-center justify-center" Style="height: 100vh;">
+                    <MudPaper Elevation="0" Class="pa-8 d-flex flex-column align-center">
+                        <MudContainer>
+                            <MudImage Src="/images/logo.png" Fluid="true" Height="40" ObjectPosition="ObjectPosition.Center"></MudImage>
+                            <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">anything sounds good</MudText>
+                            <MudText Typo="Typo.body2" Align="Align.Center" Class="mb-4">effortless, personalized recipes for you and your family.</MudText>                            
+                        </MudContainer>
+                        <MudDivider />
+                        <br/>
+                        <MudPaper Width="100%" Elevation="0" Class="pa-4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Custom.Brands.Google" Class="mb-3" OnClick="SignInWithGoogle">
+                                Continue with Google
+                            </MudButton>
+                            <br/>
+                            <MudText Typo="Typo.caption" Align="Align.Center" Class="mt-4">
+                                <center>By continuing, you agree to our Terms and Usage Policy, and acknowledge our Privacy Policy.</center>
+                            </MudText>
+                        </MudPaper>
+
+                        <MudLink Href="#" Underline="Underline.Always" Class="mt-6">Learn more</MudLink>
+                    </MudPaper>
+                </MudContainer>
+            }
+            else
+            {
+                @Body                
+            }
         </MudMainContent>
         <MudAppBar Bottom="true" Fixed="true">
             <AuthorizeView>
@@ -51,7 +76,7 @@
                             <MudText Typo="Typo.h6" Color="Color.Primary"> @(_displayName ?? "Loading...") </MudText>
                         </MudItem>
                         <MudItem Class="align-center">
-                            <MudButton Variant="Variant.Filled" Color="@(_isDarkMode ? Color.Primary :  Color.Dark)" OnClick="Logout" Class="ml-2">Logout</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="@(_isDarkMode ? Color.Primary :  Color.Dark)" OnClick="Logout" Class="ml-2">Logout</MudButton>
                         </MudItem>
                     </MudGrid>
                 </Authorized>
