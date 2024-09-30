@@ -23,10 +23,18 @@
             @if (isAuthenticated && !IsSignUpPage)
             {
                 <MudAppBar Elevation="0" Color="Color.Primary">
-                    <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                        <MudText Typo="Typo.h5">anything sounds good</MudText>
+                    <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                        <MudGrid Justify="Justify.SpaceBetween" AlignItems="center">
+                            <MudItem>
+                                <MudText Typo="Typo.h5">anything sounds good</MudText>
+                            </MudItem>
+                            <MudItem>
+                                <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Dark" OnClick="NavigateToSettings" />
+                            </MudItem>
+                        </MudGrid>
                     </MudContainer>
                 </MudAppBar>
+
             }
             else if (isLoading)
             {
@@ -169,6 +177,11 @@
         isLoading = false;
     }
 
+    private async Task NavigateToSettings()
+    {
+        Navigation.NavigateTo("/settings");
+    }
+
     private async Task ToggleTheme()
     {
         if (_mudThemeProvider != null)
@@ -188,11 +201,6 @@
             var user = await UserClientService.GetUserAsync(userId);
             _displayName = user?.DisplayName;
         }
-    }
-
-    private async Task NavigateToSettings()
-    {
-        Navigation.NavigateTo("/settings");
     }
 
     private bool IsExcludedFromAuth()
