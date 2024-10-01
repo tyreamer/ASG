@@ -16,17 +16,22 @@ namespace ASG.Services
             _httpClient = httpClient;
         }
 
-        public async Task<MealPlan> GetWeeklyPlanAsync(Guid userId)
+        public async Task<MealPlan> GetWeeklyPlanAsync(Guid userId, DateTime? weekStartDate = null)
         {
-            var response = await _httpClient.GetFromJsonAsync<MealPlan>($"api/mealplanner/weekly?userId={userId}");
+            var request = $"api/mealplanner/weekly?userId={userId}";
+
+            if (weekStartDate != null) {
+                request += "&weekStartDate=" + weekStartDate;
+            }
+
+            var response = await _httpClient.GetFromJsonAsync<MealPlan>(request);
 
             return response ?? new MealPlan();
         }
 
-        public async Task ReplaceRecipe(Guid userId, int recipeId, UserPreferences userPreferences)
+        public async Task ReplaceRecipe(User user, int recipeId)
         {
-            var request = new GenerateRecipeRequest { UserPreferences = userPreferences };
-            await _httpClient.PostAsJsonAsync($"api/mealplanner/{userId}/recipes/{recipeId}/replace", request);
+            await _httpClient.PostAsJsonAsync($"api/mealplanner/{user.Id}/recipes/{recipeId}/replace", user);
         }
 
         public async Task DislikeRecipeAsync(Recipe recipe)
@@ -34,10 +39,9 @@ namespace ASG.Services
             await _httpClient.PostAsJsonAsync("api/mealplanner/dislike", recipe);
         }
 
-        public async Task RegenerateMealPlanAsync(Guid userId, UserPreferences userPreferences)
+        public async Task RegenerateMealPlanAsync(User user, DateTime? weekStartDate = null)
         {
-            var request = new RegenerateMealPlanRequest { UserId = userId, UserPreferences = userPreferences };
-            await _httpClient.PostAsJsonAsync("api/mealplanner/regenerate/mealplan", request);
+            await _httpClient.PostAsJsonAsync("api/mealplanner/regenerate/mealplan", user);
         }
 
         public async Task LikeRecipeAsync(Recipe recipe)

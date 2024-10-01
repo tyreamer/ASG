@@ -15,12 +15,12 @@ namespace ASGBackend.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<MealPlan?> GetMealPlanByUserIdAsync(Guid userId)
+        public async Task<MealPlan?> GetMealPlanByUserIdAsync(Guid userId, DateTime weekStartDate)
         {
             return await _dbContext.MealPlans
                 .Include(mp => mp.Recipes)
                 .ThenInclude(mpr => mpr.Recipe)
-                .FirstOrDefaultAsync(mp => mp.UserId == userId);
+                .FirstOrDefaultAsync(mp => mp.UserId == userId && mp.WeekStartDate.Date == weekStartDate.Date);
         }
 
         public async Task<MealPlan?> GetMealPlan(Guid userId, DateTime weekStartDate)

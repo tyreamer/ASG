@@ -11,9 +11,9 @@ namespace ASGBackend.Helpers
             _userPreferencesFormatter = userPreferencesFormatter;
         }
 
-        public string CreateRecipePrompt(UserPreferences userPreferences, List<string> previousRecipeTitles)
+        public string CreateRecipePrompt(User user, List<string> previousRecipeTitles)
         {
-            var userPreferencesString = _userPreferencesFormatter.FormatUserPreferences(userPreferences);
+            var userPreferencesString = _userPreferencesFormatter.FormatUserPreferences(user.Preferences);
 
             //todo add cooking skill level and household size
             var prompt = $"You are a recipe assistant. Based on the following preferences, generate a unique and varied recipe in JSON format:";

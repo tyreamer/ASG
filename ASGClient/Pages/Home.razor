@@ -125,15 +125,15 @@
         isLoading = false;
     }
 
-    private async Task<(Guid userId, UserPreferences Preferences)> GetUserIdAndPreferences()
+    private async Task<User> GetUser()
     {
         var authState = await AuthService.GetAuthenticationStateAsync();
         var userIdClaim = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
         if (Guid.TryParse(userIdClaim, out var userId))
         {
-            var userPreferences = await UserClientService.GetUserPreferencesAsync(userId);
-            return (userId, userPreferences);
+            var user = await UserClientService.GetUserAsync(userId);
+            return user;
         }
 
         throw new InvalidOperationException("User is not authenticated or userId is missing.");
@@ -146,9 +146,9 @@
 
         try
         {
-            var (userId, userPreferences) = await GetUserIdAndPreferences();
-            await MealPlanClientService.RegenerateMealPlanAsync(userId, userPreferences);
-            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(userId);
+            var user = await GetUser();
+            await MealPlanClientService.RegenerateMealPlanAsync(user);
+            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(user.Id);
 
             if (weeklyPlan != null)
             {
@@ -179,9 +179,9 @@
 
         try
         {
-            var (userId, userPreferences) = await GetUserIdAndPreferences();
-            await MealPlanClientService.ReplaceRecipe(userId, recipe.Id, userPreferences);
-            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(userId);
+            var user = await GetUser();
+            await MealPlanClientService.ReplaceRecipe(user, recipe.Id);
+            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(user.Id);
             StateHasChanged();
         }
         catch (InvalidOperationException ex)
