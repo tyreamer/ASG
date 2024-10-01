@@ -76,6 +76,23 @@ namespace ASG.Services
             return null;
         }
 
+        public async Task<Guid?> GetAuthenticatedUserIdAsync()
+        {
+            var authState = await GetAuthenticationStateAsync();
+            var userClaims = authState.User;
+
+            if (userClaims.Identity != null && userClaims.Identity.IsAuthenticated)
+            {
+                var userIdClaim = userClaims.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (Guid.TryParse(userIdClaim, out var userId))
+                {
+                    return userId;
+                }
+            }
+
+            return null;
+        }
+
         public async Task HandleAuthenticationAsync(Task<AuthenticationState> authStateTask)
         {
             if (authStateTask != null)

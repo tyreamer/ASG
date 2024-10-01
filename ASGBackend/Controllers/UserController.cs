@@ -107,6 +107,11 @@ namespace ASGBackend.Controllers
         {
             try
             {
+                if (id != updatedUser.Id)
+                {
+                    return BadRequest("User ID mismatch");
+                }
+
                 var user = await _userService.UpdateUserAsync(id, updatedUser);
                 if (user == null)
                 {

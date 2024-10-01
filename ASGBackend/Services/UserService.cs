@@ -41,7 +41,9 @@ namespace ASGBackend.Services
             {
                 _logger.LogInformation($"Fetching user with id: {userId}");
 
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                var user = await _context.Users
+                    .Include(u => u.Preferences)
+                    .FirstOrDefaultAsync(u => u.Id == userId);
 
                 if (user == null)
                 {
@@ -81,19 +83,33 @@ namespace ASGBackend.Services
 
         public async Task<User?> UpdateUserAsync(Guid id, User updatedUser)
         {
-            var user = await _context.Users.Include(u => u.Preferences)
-                                           .FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.Users.Include(u => u.Preferences).FirstOrDefaultAsync(u => u.Id == id);
             if (user == null)
             {
                 return null;
             }
 
+            user.Email = updatedUser.Email;
+            user.Name = updatedUser.Name;
+            user.DisplayName = updatedUser.DisplayName;
             user.BudgetPerMeal = updatedUser.BudgetPerMeal;
             user.HouseholdSize = updatedUser.HouseholdSize;
             user.CookingSkillLevel = updatedUser.CookingSkillLevel;
-            user.Preferences = updatedUser.Preferences;
 
+            if (user.Preferences != null && updatedUser.Preferences != null)
+            {
+                user.Preferences.TotalMealsPerWeek = updatedUser.Preferences.TotalMealsPerWeek;
+                user.Preferences.DietaryRestrictions = updatedUser.Preferences.DietaryRestrictions;
+                user.Preferences.Allergies = updatedUser.Preferences.Allergies;
+                user.Preferences.FavoriteCuisines = updatedUser.Preferences.FavoriteCuisines;
+                user.Preferences.DislikedFoods = updatedUser.Preferences.DislikedFoods;
+                user.Preferences.NutritionalGoals = updatedUser.Preferences.NutritionalGoals;
+                user.Preferences.CalorieTarget = updatedUser.Preferences.CalorieTarget;
+            }
+
+            _context.Users.Update(user);
             await _context.SaveChangesAsync();
+
             return user;
         }
 

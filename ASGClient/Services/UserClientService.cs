@@ -85,10 +85,12 @@ public class UserClientService
     public async Task<User?> UpdateUserAsync(Guid userId, User updatedUser)
     {
         var response = await _httpClient.PutAsJsonAsync($"api/users/{userId}", updatedUser);
+
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<User>();
         }
+
         return null;
     }
 

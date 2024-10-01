@@ -23,13 +23,13 @@
             @if (isAuthenticated && !IsSignUpPage)
             {
                 <MudAppBar Elevation="0" Color="Color.Primary">
-                    <MudContainer Class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                    <MudContainer>
                         <MudGrid Justify="Justify.SpaceBetween" AlignItems="center">
                             <MudItem>
                                 <MudText Typo="Typo.h5">anything sounds good</MudText>
                             </MudItem>
                             <MudItem>
-                                <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Dark" OnClick="NavigateToSettings" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" Style="color: white;" OnClick="NavigateToSettings" />
                             </MudItem>
                         </MudGrid>
                     </MudContainer>
