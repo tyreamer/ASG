@@ -23,6 +23,23 @@ namespace ASGShared.Models
         public string DisplayName { get; set; } = string.Empty;
         public Budget BudgetPerMeal { get; set; } = new Budget();
         public int HouseholdSize { get; set; } = 1;
+
+        private int _totalTimeConstraintInMinutes = 60;
+        public int TotalTimeConstraintInMinutes 
+        {
+            get => _totalTimeConstraintInMinutes;
+            set
+            {
+                //max 24hrs
+                if (value < 0 || value > 1440)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(TotalTimeConstraintInMinutes), "TotalTimeConstraintInMinutes must be between 0 and 1440.");
+                }
+
+                _totalTimeConstraintInMinutes = value;
+            }
+        }
+
         public UserPreferences? Preferences { get; set; }
 
         private int _cookingSkillLevel = 1;

@@ -148,6 +148,14 @@ else
                     </MudGrid>
                 </MudContainer>
 
+                <MudDivider></MudDivider><br />
+
+                <!-- Time constraints -->
+                <MudContainer Class="mb-4">
+                    <MudText Typo="Typo.h5" Class="mb-2">Time Limit (Prep + Cook)</MudText>
+                    <MudSlider @bind-Value="activeUser.TotalTimeConstraintInMinutes" Min="10" Max="120" Step="5" Label="true" ValueLabel="true" Color="Color.Primary" />
+                </MudContainer>
+
                 <!-- Save Button -->
                 <MudContainer Class="text-center mt-4">
                     <MudButton Type="Submit" Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleSubmit">Save Preferences</MudButton>
@@ -236,7 +244,7 @@ else
 
         var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true, FullWidth = true };
 
-        DialogService.Show<PreferencesUpdatedDialog>("Preferences Updated!", parameters, options);
+        DialogService.Show<PreferencesUpdatedDialog>("Sucess - Preferences Updated", parameters, options);
     }
 
     private void AddAllergy()

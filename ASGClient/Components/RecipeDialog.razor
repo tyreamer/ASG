@@ -1,31 +1,64 @@
 ﻿@using ASGShared.Models
 @inject MudBlazor.IDialogService DialogService
 
-<MudDialog>
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true" Class="recipe-dialog">
     <DialogContent>
-        <MudText Typo="Typo.h4">@Recipe?.Name</MudText>
-            <MudText Typo="Typo.subtitle1" Class="mt-2">Cuisine Type: @Recipe?.CuisineType</MudText>
-            <MudText Typo="Typo.subtitle1" Class="mt-2">Calories: @Recipe?.Calories</MudText>
-            <MudText Typo="Typo.subtitle1" Class="mt-2">Preparation Time: @Recipe?.PrepTime</MudText>
-            <MudDivider Class="my-2" />
-            <MudText Typo="Typo.h6">Ingredients</MudText>
+        <!-- Recipe Title -->
+        <MudText Typo="Typo.h4" Class="font-bold mb-4">@Recipe?.Name</MudText>
+
+        <!-- Recipe Details Section -->
+        <MudGrid Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudItem xs="6">
+                <MudText Typo="Typo.subtitle1" Class="text-gray-600">Cuisine: @Recipe?.CuisineType</MudText>
+            </MudItem>
+            <MudItem xs="6" Class="text-right">
+                <MudText Typo="Typo.subtitle1" Class="text-gray-600">Calories: @Recipe?.Calories</MudText>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Time Details -->
+        <MudText Typo="Typo.subtitle2" Class="text-gray-600">Prep Time: @Recipe?.PrepTime mins</MudText>
+
+        <MudText Typo="Typo.subtitle2" Class="text-gray-600">Cook Time: @Recipe?.CookingTime mins</MudText>
+
+        <MudText Typo="Typo.subtitle2" Class="text-gray-600">
+            Total Time: <span class="font-bold">@Recipe?.TotalTime</span> mins
+        </MudText>
+
+        <!-- Divider -->
+        <MudDivider Class="my-3" />
+
+        <!-- Ingredients Section -->
+        <MudText Typo="Typo.h6" Class="mb-2">Ingredients</MudText>
+        <MudContainer Class="mb-3 ingredients-container">
             <MudList T="string">
                 @foreach (var ingredient in Recipe?.Ingredients ?? Array.Empty<string>())
-            {
-                <MudListItem>@ingredient</MudListItem>
-            }
-        </MudList>
-        <MudDivider Class="my-2" />
-        <MudText Typo="Typo.h6">Instructions</MudText>
-        <MudList T="string">
-            @foreach (var instruction in Recipe?.Instructions ?? Array.Empty<string>())
-            {
-                <MudListItem>@instruction</MudListItem>
-            }
-        </MudList>
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.KeyboardArrowRight" Class="pl-0">@ingredient</MudListItem>
+                }
+            </MudList>
+        </MudContainer>
+
+        <!-- Divider -->
+        <MudDivider Class="my-3" />
+
+        <!-- Instructions Section -->
+        <MudText Typo="Typo.h6" Class="mb-2">Instructions</MudText>
+        <MudContainer Class="mb-3 instructions-container">
+            <MudList T="string">
+                @foreach (var instruction in Recipe?.Instructions ?? Array.Empty<string>())
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle" Class="pl-0">@instruction</MudListItem>
+                }
+            </MudList>
+        </MudContainer>
     </DialogContent>
+
+    <!-- Dialog Actions -->
     <DialogActions>
-        <MudButton OnClick="CloseDialog" Color="Color.Primary">Close</MudButton>
+        <MudButton OnClick="CloseDialog" Variant="Variant.Filled" Color="Color.Primary" Class="rounded-lg px-4">
+            Close
+        </MudButton>
     </DialogActions>
 </MudDialog>
 
