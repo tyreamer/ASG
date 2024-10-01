@@ -1,1 +1,286 @@
-﻿
+﻿@page "/settings"
+@using ASGClient.Components
+@using ASGShared.Models
+@using MudBlazor
+@inject AuthenticationService AuthService
+@inject NavigationManager Navigation
+@inject UserClientService UserClientService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+@if (activeUser == null)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+}
+else
+{
+    <MudContainer Color="Color.Primary" MaxWidth="MaxWidth.Medium" Class="d-flex flex-column align-center justify-center pa-8">
+        <MudPaper Elevation="0" Class="pa-8 d-flex flex-column align-center" Style="width: 75%;">
+            <MudForm @ref="form" Model="activeUser" Validated="OnValidSubmit">
+
+                <!-- Meals Per Week -->
+                <MudContainer Class="mb-4">
+                    <MudText Typo="Typo.h5" Class="mb-2">Total Meals Per Week</MudText>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="TotalMealsPerWeek" Variant="Variant.Outlined" />
+                    </MudItem>
+                </MudContainer>
+
+                <MudDivider></MudDivider><br />
+
+                <!-- Dietary Restrictions -->
+                <MudContainer Class="mb-4">
+                    <MudText Typo="Typo.h5" Class="mb-2">Dietary Restrictions</MudText>
+                    <MudGrid Class="mt-2">
+                        <MudItem xs="12" md="3">
+                            <MudSwitch T="bool" @bind-Checked="activeUser.Preferences.DietaryRestrictions.IsVegetarian" Label="Vegetarian" Color="Color.Success" />
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudSwitch T="bool" @bind-Checked="activeUser.Preferences.DietaryRestrictions.IsVegan" Label="Vegan" Color="Color.Success" />
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudSwitch T="bool" @bind-Checked="activeUser.Preferences.DietaryRestrictions.IsGlutenFree" Label="Gluten-Free" Color="Color.Success" />
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudSwitch T="bool" @bind-Checked="activeUser.Preferences.DietaryRestrictions.IsPescatarian" Label="Pescatarian" Color="Color.Success" />
+                        </MudItem>
+                    </MudGrid>
+                </MudContainer>
+
+                <MudDivider></MudDivider><br />
+
+                <!-- Allergies -->
+                <MudContainer Class="mb-4">
+                    <MudText Typo="Typo.h5" Class="mb-2">Allergies</MudText>
+                    <MudChipSet SelectedValues="@activeUser.Preferences.Allergies" Removable="true">
+                        @foreach (var allergy in activeUser.Preferences.Allergies ?? Enumerable.Empty<string>())
+                        {
+                            <MudChip T="string" Text="@allergy" Closeable="true" OnClose="RemoveAllergy" />
+                        }
+                    </MudChipSet>
+                    <MudGrid Class="mt-2">
+                        <MudItem xs="10">
+                            <MudTextField @bind-Value="newAllergy" Label="Add Allergy" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="2" Class="d-flex align-center">
+                            <MudButton OnClick="AddAllergy" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudContainer>
+
+                <MudDivider></MudDivider><br />
+
+                <!-- Favorite Cuisines -->
+                <MudContainer Class="mb-4">
+                    <MudText Typo="Typo.h5" Class="mb-2">Favorite Cuisines</MudText>
+                    <MudChipSet SelectedValues="@activeUser.Preferences.FavoriteCuisines" Removable="true" Class="mb-2">
+                        @foreach (var cuisine in activeUser.Preferences.FavoriteCuisines ?? Enumerable.Empty<string>())
+                        {
+                            <MudChip T="string" Text="@cuisine" Closeable="true" OnClose="RemoveFavoriteCuisine" />
+                        }
+                    </MudChipSet>
+                    <MudGrid Class="mt-2">
+                        <MudItem xs="10">
+                            <MudTextField @bind-Value="newCuisine" Label="Add Cuisine" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="2" Class="d-flex align-center">
+                            <MudButton OnClick="AddFavoriteCuisine" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudContainer>
+
+                <MudDivider></MudDivider><br />
+
+                <!-- Disliked Foods -->
+                <MudContainer Class="mb-4">
+                    <MudText Typo="Typo.h5" Class="mb-2">Disliked Foods</MudText>
+                    <MudChipSet SelectedValues="@activeUser.Preferences.DislikedFoods" Removable="true" Class="mb-2">
+                        @foreach (var food in activeUser.Preferences.DislikedFoods ?? Enumerable.Empty<string>())
+                        {
+                            <MudChip T="string" Text="@food" Closeable="true" OnClose="RemoveDislikedFood" />
+                        }
+                    </MudChipSet>
+                    <MudGrid Class="mt-2">
+                        <MudItem xs="10">
+                            <MudTextField @bind-Value="newDislikedFood" Label="Add Disliked Food" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="2" Class="d-flex align-center">
+                            <MudButton OnClick="AddDislikedFood" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudContainer>
+
+                <MudDivider></MudDivider><br />
+
+                <!-- Nutritional Goals -->
+                <MudContainer Class="mb-4">
+                    <MudText Typo="Typo.h5" Class="mb-2">Nutritional Goals</MudText>
+                    <MudGrid Class="mt-2">
+                        <MudItem xs="12" md="4">
+                            <MudSwitch T="bool" @bind-Checked="activeUser.Preferences.NutritionalGoals.HighProtein" Label="High Protein" Color="Color.Success" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSwitch T="bool" @bind-Checked="activeUser.Preferences.NutritionalGoals.LowCarb" Label="Low Carb" Color="Color.Success" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSwitch T="bool" @bind-Checked="activeUser.Preferences.NutritionalGoals.LowFat" Label="Low Fat" Color="Color.Success" />
+                        </MudItem>
+                    </MudGrid>
+                </MudContainer>
+
+                <MudDivider></MudDivider><br />
+
+                <!-- Budget Per Meal -->
+                <MudContainer Class="mb-4">
+                    <MudText Typo="Typo.h5" Class="mb-2">Budget Per Meal</MudText>
+                    <MudGrid Class="mt-2">
+                        <MudItem xs="8">
+                            <MudTextField @bind-Value="activeUser.BudgetPerMeal.Amount" Label="Amount" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudSelect @bind-Value="activeUser.BudgetPerMeal.Currency" Label="Currency" Variant="Variant.Outlined">
+                                @foreach (var currency in validCurrencies)
+                                {
+                                    <MudSelectItem Value="@currency">@currency</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
+                </MudContainer>
+
+                <!-- Save Button -->
+                <MudContainer Class="text-center mt-4">
+                    <MudButton Type="Submit" Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleSubmit">Save Preferences</MudButton>
+                </MudContainer>
+            </MudForm>
+            <br /><br />
+            <MudDivider></MudDivider><br />
+        </MudPaper>
+    </MudContainer>
+}
+
+@code {
+    private MudForm? form;
+
+    private User? activeUser;
+
+    private string newAllergy = string.Empty;
+    private string newCuisine = string.Empty;
+    private string newDislikedFood = string.Empty;
+
+    private int TotalMealsPerWeek
+    {
+        get => activeUser?.Preferences?.TotalMealsPerWeek ?? 0;
+        set
+        {
+            if (activeUser?.Preferences != null)
+            {
+                activeUser.Preferences.TotalMealsPerWeek = value;
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = await AuthService.GetAuthenticatedUserIdAsync();
+
+        if (userId.HasValue)
+        {
+            activeUser = await UserClientService.GetUserAsync(userId.Value);
+        }
+
+        StateHasChanged();
+    }
+
+    private readonly string[] validCurrencies = { "USD", "EUR", "GBP", "CAD", "AUD" };
+
+    private async Task HandleSubmit()
+    {
+        await form.Validate();
+
+        if (form.IsValid)
+        {
+            Console.WriteLine("Form is valid.");
+            await OnValidSubmit();
+        }
+        else
+        {
+            Snackbar.Add("oops! it looks like we're missing some required fields.", Severity.Error);
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        if (activeUser != null)
+        {
+            var updatedUser = await UserClientService.UpdateUserAsync(activeUser.Id, activeUser);
+            if (updatedUser != null)
+            {
+                await ShowConfirmationDialog();
+            }
+            else
+            {
+                Snackbar.Add("Uh-oh, we dropped the spatula! Give it another go!", Severity.Error, config =>
+                {
+                    config.SnackbarVariant = Variant.Filled;
+                    config.VisibleStateDuration = 5000;
+                    config.BackgroundBlurred = true;
+                });
+            }            
+        }
+    }
+
+    private async Task ShowConfirmationDialog()
+    {
+        var parameters = new DialogParameters { ["Message"] = "Let the feasting begin!" };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true, FullWidth = true };
+
+        DialogService.Show<PreferencesUpdatedDialog>("Preferences Updated!", parameters, options);
+    }
+
+    private void AddAllergy()
+    {
+        // Ensure the allergy is not empty and doesn't already exist
+        if (!string.IsNullOrEmpty(newAllergy) && activeUser?.Preferences?.Allergies != null && !activeUser.Preferences.Allergies.Contains(newAllergy))
+        {
+            activeUser.Preferences.Allergies.Add(newAllergy.Trim()); // Add the new allergy to the list
+            newAllergy = string.Empty;
+        }
+    }
+
+    private void RemoveAllergy(MudChip<string> allergyChip)
+    {
+        activeUser?.Preferences?.Allergies?.Remove(allergyChip.Text);
+    }
+
+    private void AddFavoriteCuisine()
+    {
+        // Ensure the cuisine is not empty and doesn't already exist
+        if (!string.IsNullOrEmpty(newCuisine) && activeUser?.Preferences?.FavoriteCuisines != null && !activeUser.Preferences.FavoriteCuisines.Contains(newCuisine))
+        {
+            activeUser.Preferences.FavoriteCuisines.Add(newCuisine.Trim()); // Add the new cuisine to the list
+            newCuisine = string.Empty;
+        }
+    }
+
+    private void RemoveFavoriteCuisine(MudChip<string> cuisineChip)
+    {
+        activeUser?.Preferences?.FavoriteCuisines?.Remove(cuisineChip.Text);
+    }
+
+    private void AddDislikedFood()
+    {
+        // Ensure the disliked food is not empty and doesn't already exist
+        if (!string.IsNullOrEmpty(newDislikedFood) && activeUser?.Preferences?.DislikedFoods != null && !activeUser.Preferences.DislikedFoods.Contains(newDislikedFood))
+        {
+            activeUser.Preferences.DislikedFoods.Add(newDislikedFood.Trim()); // Add the new disliked food to the list
+            newDislikedFood = string.Empty;
+        }
+    }
+
+    private void RemoveDislikedFood(MudChip<string> dislikedFoodChip)
+    {
+        activeUser?.Preferences?.DislikedFoods?.Remove(dislikedFoodChip.Text);
+    }
+}
