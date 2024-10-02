@@ -8,6 +8,7 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using Microsoft.ML;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,23 +57,29 @@ builder.Services.AddSingleton<GeminiService>(provider =>
     return new GeminiService(httpClient, geminiApiKey, logger);
 });
 
-builder.Services.AddSingleton<UserClusteringAgent>();
+// Register AIAgentService with dependencies
+builder.Services.AddSingleton(new MLContext());
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<AIAgentService>();
+builder.Services.AddScoped<UserClusteringAgent>();
+builder.Services.AddScoped<RecipeClusteringAgent>();
+
+//Model Training
+builder.Services.AddHostedService<ModelTrainingBackgroundService>();
+
 builder.Services.AddScoped<MealPlanService>();
 builder.Services.AddScoped<UserService>();
 
 // Register repositories
 builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IMealPlanRepository, MealPlanRepository>(); // Add this line
+builder.Services.AddScoped<IMealPlanRepository, MealPlanRepository>();
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") + ";TrustServerCertificate=True"));
 //TODO: update with cert
 
-// Register AIAgentService with dependencies
-builder.Services.AddHttpClient();
-builder.Services.AddSingleton<AIAgentService>();
 
 builder.Services.AddControllers();
 

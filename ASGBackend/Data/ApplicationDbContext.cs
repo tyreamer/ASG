@@ -15,6 +15,9 @@ namespace ASGBackend.Data
         public DbSet<MealPlanRecipe> MealPlanRecipes { get; set; } = null!;
         public DbSet<Recipe> Recipes { get; set; } = null!;
         public DbSet<UserPreferences> UserPreferences { get; set; } = null!;
+        public DbSet<RecipeClassificationResult> RecipeClassificationResults { get; set; } = null!;
+        public DbSet<UserCluster> UserClusters { get; set; } = null!;
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
