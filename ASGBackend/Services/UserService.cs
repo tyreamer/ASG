@@ -95,6 +95,7 @@ namespace ASGBackend.Services
             user.BudgetPerMeal = updatedUser.BudgetPerMeal;
             user.HouseholdSize = updatedUser.HouseholdSize;
             user.CookingSkillLevel = updatedUser.CookingSkillLevel;
+            user.TotalTimeConstraintInMinutes = updatedUser.TotalTimeConstraintInMinutes;
 
             if (user.Preferences != null && updatedUser.Preferences != null)
             {

@@ -10,7 +10,9 @@
 
 @if (activeUser == null)
 {
-    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    <MudContainer Class="d-flex justify-center align-center" Style="height: 100vh;">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    </MudContainer>
 }
 else
 {
@@ -148,6 +150,15 @@ else
                     </MudGrid>
                 </MudContainer>
 
+                <MudDivider></MudDivider><br />
+
+                <!-- Time constraints -->
+                <MudContainer Class="mb-4">
+                    <MudText Typo="Typo.h5" Class="mb-2">Time Limit (Prep + Cook)</MudText>
+                    <MudText Typo="Typo.caption" Class="mb-2">@activeUser.TotalTimeConstraintInMinutes minutes</MudText>
+                    <MudSlider @bind-Value="activeUser.TotalTimeConstraintInMinutes" Min="10" Max="120" Step="5" Label="true" ValueLabel="true" Color="Color.Primary" />
+                </MudContainer>
+
                 <!-- Save Button -->
                 <MudContainer Class="text-center mt-4">
                     <MudButton Type="Submit" Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleSubmit">Save Preferences</MudButton>
@@ -236,7 +247,7 @@ else
 
         var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true, FullWidth = true };
 
-        DialogService.Show<PreferencesUpdatedDialog>("Preferences Updated!", parameters, options);
+        DialogService.Show<PreferencesUpdatedDialog>("Sucess - Preferences Updated", parameters, options);
     }
 
     private void AddAllergy()

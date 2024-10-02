@@ -15,5 +15,7 @@ namespace ASGShared.Models
         public string CuisineType { get; set; }
         public string Calories { get; set; }
         public string PrepTime { get; set; }
+        public string CookingTime { get; set; }
+        public string TotalTime { get; set; }
     }
 }

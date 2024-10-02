@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASGBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240926190502_UpdateToLatestEFCore")]
-    partial class UpdateToLatestEFCore
+    [Migration("20241001135840_TimeConstraint")]
+    partial class TimeConstraint
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,9 +33,8 @@ namespace ASGBackend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("WeekStartDate")
                         .HasColumnType("datetime2");
@@ -83,6 +82,10 @@ namespace ASGBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CookingTime")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CuisineType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -99,7 +102,11 @@ namespace ASGBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CookingTime")
+                    b.Property<string>("PrepTime")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TotalTime")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -110,8 +117,9 @@ namespace ASGBackend.Migrations
 
             modelBuilder.Entity("ASGShared.Models.User", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("CookingSkillLevel")
                         .HasColumnType("int");
@@ -122,7 +130,7 @@ namespace ASGBackend.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("HouseholdSize")
                         .HasColumnType("int");
@@ -134,9 +142,52 @@ namespace ASGBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("TotalTimeConstraintInMinutes")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("ASGShared.Models.UserPreferences", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Allergies")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CalorieTarget")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DislikedFoods")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FavoriteCuisines")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TotalMealsPerWeek")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserPreferences");
                 });
 
             modelBuilder.Entity("ASGShared.Models.MealPlanRecipe", b =>
@@ -162,11 +213,11 @@ namespace ASGBackend.Migrations
                 {
                     b.OwnsOne("ASGShared.Models.Budget", "BudgetPerMeal", b1 =>
                         {
-                            b1.Property<string>("UserId")
-                                .HasColumnType("nvarchar(450)");
+                            b1.Property<Guid>("UserId")
+                                .HasColumnType("uniqueidentifier");
 
-                            b1.Property<decimal>("Amount")
-                                .HasColumnType("decimal(18,2)");
+                            b1.Property<int>("Amount")
+                                .HasColumnType("int");
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
@@ -180,106 +231,80 @@ namespace ASGBackend.Migrations
                                 .HasForeignKey("UserId");
                         });
 
-                    b.OwnsOne("ASGShared.Models.UserPreferences", "Preferences", b1 =>
-                        {
-                            b1.Property<string>("UserId1")
-                                .HasColumnType("nvarchar(450)");
-
-                            b1.Property<string>("Allergies")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)");
-
-                            b1.Property<int>("CalorieTarget")
-                                .HasColumnType("int");
-
-                            b1.Property<string>("DislikedFoods")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)");
-
-                            b1.Property<string>("FavoriteCuisines")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)");
-
-                            b1.Property<int>("Id")
-                                .HasColumnType("int");
-
-                            b1.Property<int>("TotalMealsPerWeek")
-                                .HasColumnType("int");
-
-                            b1.Property<int>("UserId")
-                                .HasColumnType("int");
-
-                            b1.HasKey("UserId1");
-
-                            b1.ToTable("Users");
-
-                            b1.WithOwner()
-                                .HasForeignKey("UserId1");
-
-                            b1.OwnsOne("ASGShared.Models.DietaryRestrictions", "DietaryRestrictions", b2 =>
-                                {
-                                    b2.Property<string>("UserPreferencesUserId1")
-                                        .HasColumnType("nvarchar(450)");
-
-                                    b2.Property<bool>("IsGlutenFree")
-                                        .HasColumnType("bit");
-
-                                    b2.Property<bool>("IsPescatarian")
-                                        .HasColumnType("bit");
-
-                                    b2.Property<bool>("IsVegan")
-                                        .HasColumnType("bit");
-
-                                    b2.Property<bool>("IsVegetarian")
-                                        .HasColumnType("bit");
-
-                                    b2.HasKey("UserPreferencesUserId1");
-
-                                    b2.ToTable("Users");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("UserPreferencesUserId1");
-                                });
-
-                            b1.OwnsOne("ASGShared.Models.NutritionalGoals", "NutritionalGoals", b2 =>
-                                {
-                                    b2.Property<string>("UserPreferencesUserId1")
-                                        .HasColumnType("nvarchar(450)");
-
-                                    b2.Property<bool>("HighProtein")
-                                        .HasColumnType("bit");
-
-                                    b2.Property<bool>("LowCarb")
-                                        .HasColumnType("bit");
-
-                                    b2.Property<bool>("LowFat")
-                                        .HasColumnType("bit");
-
-                                    b2.HasKey("UserPreferencesUserId1");
-
-                                    b2.ToTable("Users");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("UserPreferencesUserId1");
-                                });
-
-                            b1.Navigation("DietaryRestrictions")
-                                .IsRequired();
-
-                            b1.Navigation("NutritionalGoals")
-                                .IsRequired();
-                        });
-
                     b.Navigation("BudgetPerMeal")
                         .IsRequired();
+                });
 
-                    b.Navigation("Preferences")
+            modelBuilder.Entity("ASGShared.Models.UserPreferences", b =>
+                {
+                    b.HasOne("ASGShared.Models.User", null)
+                        .WithOne("Preferences")
+                        .HasForeignKey("ASGShared.Models.UserPreferences", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("ASGShared.Models.DietaryRestrictions", "DietaryRestrictions", b1 =>
+                        {
+                            b1.Property<int>("UserPreferencesId")
+                                .HasColumnType("int");
+
+                            b1.Property<bool>("IsGlutenFree")
+                                .HasColumnType("bit");
+
+                            b1.Property<bool>("IsPescatarian")
+                                .HasColumnType("bit");
+
+                            b1.Property<bool>("IsVegan")
+                                .HasColumnType("bit");
+
+                            b1.Property<bool>("IsVegetarian")
+                                .HasColumnType("bit");
+
+                            b1.HasKey("UserPreferencesId");
+
+                            b1.ToTable("UserPreferences");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserPreferencesId");
+                        });
+
+                    b.OwnsOne("ASGShared.Models.NutritionalGoals", "NutritionalGoals", b1 =>
+                        {
+                            b1.Property<int>("UserPreferencesId")
+                                .HasColumnType("int");
+
+                            b1.Property<bool>("HighProtein")
+                                .HasColumnType("bit");
+
+                            b1.Property<bool>("LowCarb")
+                                .HasColumnType("bit");
+
+                            b1.Property<bool>("LowFat")
+                                .HasColumnType("bit");
+
+                            b1.HasKey("UserPreferencesId");
+
+                            b1.ToTable("UserPreferences");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserPreferencesId");
+                        });
+
+                    b.Navigation("DietaryRestrictions")
+                        .IsRequired();
+
+                    b.Navigation("NutritionalGoals")
                         .IsRequired();
                 });
 
             modelBuilder.Entity("ASGShared.Models.MealPlan", b =>
                 {
                     b.Navigation("Recipes");
+                });
+
+            modelBuilder.Entity("ASGShared.Models.User", b =>
+                {
+                    b.Navigation("Preferences");
                 });
 #pragma warning restore 612, 618
         }

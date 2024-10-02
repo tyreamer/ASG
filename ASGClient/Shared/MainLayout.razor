@@ -17,31 +17,32 @@
         <MudDialogProvider />
         <MudSnackbarProvider />
 
-        <!-- Your layout content -->
-        <MudLayout>
-
+    <MudLayout>
+        @if (isLoading)
+        {
+            <MudContainer Class="d-flex justify-center align-center" Style="height: 100vh;">
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            </MudContainer>
+        }
+        else
+        {
             @if (isAuthenticated && !IsSignUpPage)
             {
                 <MudAppBar Elevation="0" Color="Color.Primary">
                     <MudContainer>
                         <MudGrid Justify="Justify.SpaceBetween" AlignItems="center">
-                            <MudItem>
+                            <MudItem style="cursor:pointer" @onclick="@( () => Navigation.NavigateTo("/") )">
                                 <MudText Typo="Typo.h5">anything sounds good</MudText>
                             </MudItem>
                             <MudItem>
-                            <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" Style="color: white;" OnClick="NavigateToSettings" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" Style="color: white;" OnClick="NavigateToSettings" />
                             </MudItem>
                         </MudGrid>
                     </MudContainer>
                 </MudAppBar>
+            }
 
-            }
-            else if (isLoading)
-            {
-                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-            }
             <MudMainContent>
-                @* Not all pages require authentication *@
                 @if (isAuthenticated || IsExcludedFromAuth())
                 {
                     @Body
@@ -72,30 +73,10 @@
                     </MudContainer>
                 }
             </MudMainContent>
-            <MudAppBar Bottom="true" Fixed="true">
-                <AuthorizeView>
-                    <Authorized>
-                        <MudGrid Justify="Justify.FlexEnd" AlignItems="AlignItems.Center">
-                            <MudItem>
-                                <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
-                                               Color="Color.Primary"
-                                               OnClick="ToggleTheme"
-                                               Class="ml-auto" />
-                            </MudItem>
-                            <MudItem Class="align-center">
-                                <MudText Typo="Typo.h6" Color="Color.Primary"> @(_displayName ?? string.Empty) </MudText>
-                            </MudItem>
-                            <MudItem Class="align-center">
-                            @if (isAuthenticated)
-                            {
-                                <MudButton Variant="Variant.Outlined" Color="@(_isDarkMode ? Color.Primary :  Color.Dark)" OnClick="Logout" Class="ml-2">Logout</MudButton>
-                            }
-                        </MudItem>
-                            </MudGrid>
-                        </Authorized>
-                    </AuthorizeView>
-                </MudAppBar>
-            </MudLayout>
+        }
+    </MudLayout>
+
+
 </CascadingAuthenticationState>
 
 @code {

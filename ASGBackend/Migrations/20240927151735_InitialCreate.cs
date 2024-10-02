@@ -36,7 +36,7 @@ namespace ASGBackend.Migrations
                     Instructions = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CuisineType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Calories = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PrepTime = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    CookingTime = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {

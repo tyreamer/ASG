@@ -79,6 +79,10 @@ namespace ASGBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CookingTime")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CuisineType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -96,6 +100,10 @@ namespace ASGBackend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PrepTime")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TotalTime")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -130,6 +138,9 @@ namespace ASGBackend.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TotalTimeConstraintInMinutes")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

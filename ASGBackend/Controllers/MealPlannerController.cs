@@ -1,4 +1,5 @@
 ﻿using ASG.Services;
+using ASGShared.Helpers;
 using ASGBackend.Interfaces;
 using ASGBackend.Services;
 using ASGShared.Models;
@@ -32,11 +33,15 @@ namespace ASGBackend.Controllers
         }
 
         [HttpGet("weekly")]
-        public async Task<ActionResult<MealPlan>> GetWeeklyPlan([FromQuery] Guid userId)
+        public async Task<ActionResult<MealPlan>> GetWeeklyPlan([FromQuery] Guid userId, [FromQuery] DateTime? weekStartDate = null)
         {
             try
             {
-                var weeklyPlan = await _mealPlanService.GetWeeklyPlan(userId);
+                if (weekStartDate == null) {
+                    weekStartDate = DateTime.Now.StartOfWeek(DayOfWeek.Sunday);
+                }
+
+                var weeklyPlan = await _mealPlanService.GetWeeklyPlan(userId, weekStartDate.Value);
                 return Ok(weeklyPlan);
             }
             catch (Exception ex)
@@ -47,16 +52,16 @@ namespace ASGBackend.Controllers
         }
 
         [HttpPost("{userId}/recipes/{recipeId}/replace")]
-        public async Task<IActionResult> ReplaceRecipe([FromBody] GenerateRecipeRequest request, Guid userId, int recipeId)
+        public async Task<IActionResult> ReplaceRecipe([FromBody] User user, int recipeId) //TODO add week started 
         {
-            if (request == null || request.UserPreferences == null || recipeId <= 0 || userId == Guid.NewGuid())
+            if (user == null || user.Preferences == null || recipeId <= 0 || user.Id == Guid.NewGuid())
             {
                 return BadRequest("Invalid request data.");
             }
 
             try
             {
-                var newRecipe = await _mealPlanService.ReplaceRecipeAsync(userId, recipeId, request.UserPreferences);
+                var newRecipe = await _mealPlanService.ReplaceRecipeAsync(user, recipeId);
                 return Ok(newRecipe);
             }
             catch (Exception ex)
@@ -67,16 +72,16 @@ namespace ASGBackend.Controllers
         }
 
         [HttpPost("recipes/generate")]
-        public async Task<IActionResult> GenerateRecipe([FromBody] GenerateRecipeRequest request)
+        public async Task<IActionResult> GenerateRecipe([FromBody] User user) //TODO add week started 
         {
-            if (request == null || request.UserPreferences == null)
+            if (user == null || user.Preferences == null)
             {
                 return BadRequest("Invalid request data.");
             }
 
             try
             {
-                var newRecipe = await _mealPlanService.RegenerateRecipe(request.UserPreferences);
+                var newRecipe = await _mealPlanService.RegenerateRecipe(user);
                 return Ok(newRecipe);
             }
             catch (Exception ex)
@@ -87,16 +92,22 @@ namespace ASGBackend.Controllers
         }
 
         [HttpPost("regenerate/mealplan")]
-        public async Task<IActionResult> RegenerateMealPlan([FromBody] RegenerateMealPlanRequest request)
+        public async Task<IActionResult> RegenerateMealPlan([FromBody] User user, DateTime? weekStartDate = null)
         {
-            if (request == null || request.UserId == Guid.NewGuid() || request.UserPreferences == null)
+            if (weekStartDate == null)
+            {
+                weekStartDate = DateTime.Now.StartOfWeek(DayOfWeek.Sunday);
+            }
+
+            if (user == null || user.Id == Guid.NewGuid() || user.Preferences == null)
             {
                 return BadRequest("Invalid request data.");
             }
 
             try
             {
-                var newMealPlan = await _mealPlanService.RegenerateMealPlanAsync(request.UserId, request.UserPreferences);
+                //TODO: add weekstarted
+                var newMealPlan = await _mealPlanService.RegenerateMealPlanAsync(user, weekStartDate.Value);
                 return Ok(newMealPlan);
             }
             catch (Exception ex)

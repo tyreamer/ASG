@@ -1,6 +1,4 @@
-using System;
-
-namespace ASGBackend.Helpers
+namespace ASGShared.Helpers
 {
     public static class DateTimeExtensions
     {

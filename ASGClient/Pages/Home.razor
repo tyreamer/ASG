@@ -1,4 +1,5 @@
 ﻿@page "/"
+
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
 @using ASGShared.Models
@@ -7,6 +8,8 @@
 @using Microsoft.AspNetCore.Components
 @using MudBlazor
 @using ASGClient.Helpers
+@using ASGShared.Helpers
+@using Microsoft.AspNetCore.WebUtilities
 @inject IJSRuntime JsRuntime
 @inject AuthenticationService AuthService
 @inject NavigationManager Navigation
@@ -18,7 +21,9 @@
 
     @if (isLoading)
     {
-        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <MudContainer Class="d-flex justify-center align-center" Style="height: 100vh;">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        </MudContainer>
     }
     else if (isAuthenticated)
     {
@@ -26,9 +31,39 @@
             <MudContainer Class="px-4 py-6 sm:px-0">
                 <br/>
 
+                @if (mealPlanStartDate < GetStartOfCurrentWeek())
+                {
+                    <MudAlert Severity="Severity.Warning" Elevation="3" Class="mb-4">
+                        Psst! You're looking at an old week.
+                    </MudAlert>
+                }
+
+
+                <MudText Typo="Typo.h6" Align="Align.Center">Week of</MudText>
+                <MudGrid Justify="Justify.SpaceBetween" AlignItems="Center" Class="mb-6">
+                    <!-- Previous Week Button -->
+                    <MudItem xs="4" sm="4" md="4" lg="4" Class="d-flex justify-start">
+                        <MudButton StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="NavigateToPreviousWeek" Variant="Variant.Text" Color="Color.Primary">
+                            Previous
+                        </MudButton>
+                    </MudItem>
+
+                    <!-- Center Area for Week of Text and Date (Stacked) -->
+                    <MudItem xs="4" sm="4" md="4" lg="4" Class="d-flex flex-col justify-center align-center">
+                        <MudText Typo="Typo.h4" Align="Align.Center">@mealPlanStartDate.ToString("MMMM dd, yyyy")</MudText>
+                    </MudItem>
+
+                    <!-- Next Week Button -->
+                    <MudItem xs="4" sm="4" md="4" lg="4" Class="d-flex justify-end">
+                        <MudButton EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToNextWeek" Variant="Variant.Text" Color="Color.Primary">
+                            Next
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+
                 <br />
                 @if (isRegenerating)
-                {                    
+                {             
                     <MudText Typo="Typo.h2" Class="d-flex align-center justify-center">
                         <MudIcon Icon="@Icons.Material.Filled.AutoFixHigh"></MudIcon>
                     </MudText>
@@ -39,18 +74,24 @@
                 }
                 else if (weeklyPlan.Recipes?.Count > 0)
                 {
-                    <MudContainer Class="flex flex-col items-center mb-6">
-                        <MudText Typo="Typo.h4" Align="Align.Center">Week of</MudText>
-                        <MudText Typo="Typo.h4" Align="Align.Center">@mealPlanStartDate.ToString("MMMM dd, yyyy")</MudText>
 
-                        <!-- Centered Button with width control and flexbox -->
-                        <MudContainer Class="d-flex justify-center w-100 mt-4">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-auto" OnClick="OpenGroceryListDialog">
-                                <MudIcon Icon="@Icons.Material.Filled.List" Class="mr-2" />
-                                View Grocery List
-                            </MudButton>
-                        </MudContainer>
+                    <!-- Centered View Grocery List Button -->
+                    <MudContainer Class="d-flex justify-center w-100 mt-4">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenGroceryListDialog" Class="mx-auto">
+                            <MudIcon Icon="@Icons.Material.Filled.List" Class="mr-2" />
+                            View Grocery List
+                        </MudButton>
                     </MudContainer>
+
+
+
+
+
+                    <br />
+
+                    <MudDivider></MudDivider>
+
+                    <br />
 
                     <RecipeListItem Recipes="weeklyPlan.Recipes" MealPlanStartDate="mealPlanStartDate" OnRegeneratePlan="ConfirmRegeneratePlan" OnViewRecipe="ViewRecipe" OnDislikeRecipe="ConfirmDislikeRecipe" />
 
@@ -97,6 +138,9 @@
     private bool _isDarkMode;
     [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
 
+    [Parameter]
+    public DateTime? weekStartDate { get; set; }
+
     private DateTime mealPlanStartDate;
     private bool isAuthenticated;
     private bool isLoading = true;
@@ -107,33 +151,59 @@
     {
         if (AuthStateTask != null)
         {
-            await AuthService.HandleAuthenticationAsync(AuthStateTask);
-            var authState = await AuthService.GetAuthenticationStateAsync();
-            isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
-
-            if (isAuthenticated)
-            {
-                var userIdClaim = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-                if (Guid.TryParse(userIdClaim, out var userId))
-                {
-                    weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(userId);
-                    mealPlanStartDate = weeklyPlan.WeekStartDate;
-                }
-            }
+            await AuthService.HandleAuthenticationAsync(AuthStateTask);            
         }
 
         isLoading = false;
     }
 
-    private async Task<(Guid userId, UserPreferences Preferences)> GetUserIdAndPreferences()
+    protected override async Task OnParametersSetAsync()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("weekStartDate", out var weekStartDateValue))
+        {
+            if (DateTime.TryParse(weekStartDateValue, out var parsedDate))
+            {
+                weekStartDate = parsedDate;
+            }
+        }
+
+        mealPlanStartDate = weekStartDate ?? GetStartOfCurrentWeek();
+        await LoadMealPlanDataAsync();
+    }
+
+    private async Task LoadMealPlanDataAsync()
+    {
+        var authState = await AuthService.GetAuthenticationStateAsync();
+        isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+
+        if (isAuthenticated)
+        {
+            var userIdClaim = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (Guid.TryParse(userIdClaim, out var userId))
+            {
+                mealPlanStartDate = (weekStartDate ?? DateTime.Now).StartOfWeek(DayOfWeek.Sunday);
+                weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(userId, mealPlanStartDate);
+            }
+        }
+    }
+
+    private DateTime GetStartOfCurrentWeek()
+    {
+        DateTime now = DateTime.Now;
+        int diff = (7 + (now.DayOfWeek - DayOfWeek.Sunday)) % 7;
+        return now.AddDays(-1 * diff).Date;
+    }
+
+    private async Task<User> GetUser()
     {
         var authState = await AuthService.GetAuthenticationStateAsync();
         var userIdClaim = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
         if (Guid.TryParse(userIdClaim, out var userId))
         {
-            var userPreferences = await UserClientService.GetUserPreferencesAsync(userId);
-            return (userId, userPreferences);
+            var user = await UserClientService.GetUserAsync(userId);
+            return user;
         }
 
         throw new InvalidOperationException("User is not authenticated or userId is missing.");
@@ -146,14 +216,9 @@
 
         try
         {
-            var (userId, userPreferences) = await GetUserIdAndPreferences();
-            await MealPlanClientService.RegenerateMealPlanAsync(userId, userPreferences);
-            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(userId);
-
-            if (weeklyPlan != null)
-            {
-                mealPlanStartDate = weeklyPlan.WeekStartDate;                
-            }
+            var user = await GetUser();
+            await MealPlanClientService.RegenerateMealPlanAsync(user, mealPlanStartDate);
+            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(user.Id);
 
             StateHasChanged();
         }
@@ -179,9 +244,9 @@
 
         try
         {
-            var (userId, userPreferences) = await GetUserIdAndPreferences();
-            await MealPlanClientService.ReplaceRecipe(userId, recipe.Id, userPreferences);
-            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(userId);
+            var user = await GetUser();
+            await MealPlanClientService.ReplaceRecipe(user, recipe.Id);
+            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(user.Id);
             StateHasChanged();
         }
         catch (InvalidOperationException ex)
@@ -254,5 +319,17 @@
     private void AdjustMealPlan()
     {
         Navigation.NavigateTo("/adjust-plan");
+    }
+
+    private void NavigateToNextWeek()
+    {
+        var nextWeekStartDate = mealPlanStartDate.AddDays(7);
+        Navigation.NavigateTo($"/?weekStartDate={nextWeekStartDate:yyyy-MM-dd}");
+    }
+
+    private void NavigateToPreviousWeek()
+    {
+        var previousWeekStartDate = mealPlanStartDate.AddDays(-7);
+        Navigation.NavigateTo($"/?weekStartDate={previousWeekStartDate:yyyy-MM-dd}");
     }
 }
