@@ -1,5 +1,5 @@
 ﻿using ASG.Services;
-using ASGBackend.Helpers;
+using ASGShared.Helpers;
 using ASGBackend.Interfaces;
 using ASGBackend.Services;
 using ASGShared.Models;
@@ -38,10 +38,10 @@ namespace ASGBackend.Controllers
             try
             {
                 if (weekStartDate == null) {
-                    weekStartDate = DateTime.Now;
+                    weekStartDate = DateTime.Now.StartOfWeek(DayOfWeek.Sunday);
                 }
 
-                var weeklyPlan = await _mealPlanService.GetWeeklyPlan(userId, weekStartDate);
+                var weeklyPlan = await _mealPlanService.GetWeeklyPlan(userId, weekStartDate.Value);
                 return Ok(weeklyPlan);
             }
             catch (Exception ex)
@@ -92,8 +92,13 @@ namespace ASGBackend.Controllers
         }
 
         [HttpPost("regenerate/mealplan")]
-        public async Task<IActionResult> RegenerateMealPlan([FromBody] User user)
+        public async Task<IActionResult> RegenerateMealPlan([FromBody] User user, DateTime? weekStartDate = null)
         {
+            if (weekStartDate == null)
+            {
+                weekStartDate = DateTime.Now.StartOfWeek(DayOfWeek.Sunday);
+            }
+
             if (user == null || user.Id == Guid.NewGuid() || user.Preferences == null)
             {
                 return BadRequest("Invalid request data.");
@@ -102,7 +107,7 @@ namespace ASGBackend.Controllers
             try
             {
                 //TODO: add weekstarted
-                var newMealPlan = await _mealPlanService.RegenerateMealPlanAsync(user);
+                var newMealPlan = await _mealPlanService.RegenerateMealPlanAsync(user, weekStartDate.Value);
                 return Ok(newMealPlan);
             }
             catch (Exception ex)

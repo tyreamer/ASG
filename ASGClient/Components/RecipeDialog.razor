@@ -4,12 +4,14 @@
 <MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true" Class="recipe-dialog">
     <DialogContent>
         <!-- Recipe Title -->
-        <MudText Typo="Typo.h4" Class="font-bold mb-4">@Recipe?.Name</MudText>
+        <MudText Typo="Typo.h5" Class="font-bold mb-4">@Recipe?.Name</MudText>
+
+        <MudDivider Class="my-3" />
 
         <!-- Recipe Details Section -->
         <MudGrid Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
             <MudItem xs="6">
-                <MudText Typo="Typo.subtitle1" Class="text-gray-600">Cuisine: @Recipe?.CuisineType</MudText>
+                <MudText Typo="Typo.subtitle1" Class="text-gray-600">(@Recipe?.CuisineType)</MudText>
             </MudItem>
             <MudItem xs="6" Class="text-right">
                 <MudText Typo="Typo.subtitle1" Class="text-gray-600">Calories: @Recipe?.Calories</MudText>

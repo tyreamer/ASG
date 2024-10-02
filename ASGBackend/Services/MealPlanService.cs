@@ -1,5 +1,5 @@
 using ASGBackend.Services;
-using ASGBackend.Helpers; // Add this using directive
+using ASGBackend.Helpers;
 using ASGShared.Models;
 using Microsoft.Extensions.Logging;
 using System;
@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using ASGBackend.Interfaces;
 using ASGBackend.Repositories;
+using ASGShared.Helpers;
 
 namespace ASG.Services
 {
@@ -27,12 +28,11 @@ namespace ASG.Services
             _mealPlanRepository = mealPlanRepository;
         }
 
-        public async Task<MealPlan> GetWeeklyPlan(Guid userId, DateTime? weekStarted = null)
+        public async Task<MealPlan> GetWeeklyPlan(Guid userId, DateTime weekStarted)
         {
             try
             {
-                var weekStartDate = weekStarted ?? DateTime.Now;
-                var mealPlan = await _mealPlanRepository.GetMealPlan(userId, weekStartDate.StartOfWeek(DayOfWeek.Sunday));
+                var mealPlan = await _mealPlanRepository.GetMealPlan(userId, weekStarted);
 
                 if (mealPlan != null)
                 {
@@ -81,20 +81,23 @@ namespace ASG.Services
                     mealPlan.Recipes.Remove(oldRecipe);
                 }
 
-                // Add the new recipe to the meal plan
-                var mealPlanRecipe = new MealPlanRecipe
+                // Create a new MealPlanRecipe and assign the MealPlan and MealPlanId
+                var newMealPlanRecipe = new MealPlanRecipe
                 {
                     RecipeId = newRecipe.Id,
-                    Recipe = newRecipe,
-                    DayOfWeek = oldRecipe?.DayOfWeek ?? (int)DateTime.Now.DayOfWeek // Preserve the day of the week
-                };
-                mealPlan.Recipes.Add(mealPlanRecipe);
+                    MealPlan = mealPlan,
+                    MealPlanId = mealPlan.Id,
+                    DayOfWeek = oldRecipe?.DayOfWeek ?? 0, // Assuming you want to keep the same day of the week
+                    Recipe = newRecipe
+                }; ;
 
-                // Save the updated meal plan
+                mealPlan.Recipes.Add(newMealPlanRecipe);
+
                 await _mealPlanRepository.UpdateMealPlanAsync(mealPlan);
 
                 _logger.LogInformation($"Replaced recipe {recipeId} with new recipe {newRecipe.Id} for user {user.Id}");
-                return mealPlanRecipe;
+
+                return newMealPlanRecipe;
             }
             catch (Exception ex)
             {
@@ -175,10 +178,9 @@ namespace ASG.Services
             return JsonSerializer.Serialize(jsonObject);
         }
 
-        public async Task<MealPlan> RegenerateMealPlanAsync(User user, DateTime? weekStarted = null)
+        public async Task<MealPlan> RegenerateMealPlanAsync(User user, DateTime weekStarted)
         {
-            var weekStartDate = weekStarted ?? DateTime.Now.StartOfWeek(DayOfWeek.Sunday);
-            var mealPlan = await _mealPlanRepository.GetMealPlan(user.Id, weekStartDate);
+            var mealPlan = await _mealPlanRepository.GetMealPlan(user.Id, weekStarted);
 
             if (mealPlan != null && mealPlan.Recipes?.Count > 0)
             {
@@ -191,15 +193,24 @@ namespace ASG.Services
                 mealPlan = new MealPlan
                 {
                     UserId = user.Id,
-                    WeekStartDate = weekStartDate
+                    WeekStartDate = weekStarted
                 };
 
-                // Add the new meal plan to the repository
+                // Add the new meal plan to the repository and save to get the generated ID
                 await _mealPlanRepository.AddMealPlanAsync(mealPlan);
+                await _mealPlanRepository.SaveChangesAsync();
             }
 
             // Generate new recipes for the meal plan
             var newRecipes = await GenerateWeeklyRecipes(user);
+
+            // Set MealPlan and MealPlanId for each new recipe
+            foreach (var recipe in newRecipes)
+            {
+                recipe.MealPlan = mealPlan;
+                recipe.MealPlanId = mealPlan.Id;
+            }
+
             mealPlan.Recipes = newRecipes;
             await _mealPlanRepository.SaveChangesAsync();
 
@@ -208,8 +219,6 @@ namespace ASG.Services
 
         private async Task<List<MealPlanRecipe>> GenerateWeeklyRecipes(User user)
         {
-            //TODO add week started
-
             var newRecipes = new List<MealPlanRecipe>();
             int numberOfRecipes = user.Preferences.TotalMealsPerWeek;
             var currentRecipeTitles = new List<string>();

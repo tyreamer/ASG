@@ -22,13 +22,17 @@
                 </MudItem>
             </MudGrid>
 
+            <MudText Typo="Typo.caption" Class="mt-2 text-gray">(@recipe.Recipe.CuisineType)</MudText>
+            <br />
             <MudText Typo="Typo.caption" Class="mt-2 text-gray">Calories: @recipe.Recipe.Calories</MudText>
 
             <MudText Typo="Typo.body2" Class="mt-4">
                 @string.Join(", ", recipe.Recipe.Ingredients)
             </MudText>
+            <br />
+            <MudDivider></MudDivider>
 
-            <MudGrid Class="mt-4 align-center">
+            <MudGrid Class="mt-2 align-center">
                 <MudItem xs="6" Class="d-flex">
                     <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Info" Size="Size.Small" Class="icon-hover-warning" />
                     <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" Color="Color.Info" Size="Size.Small" Class="ml-2 icon-hover-warning" OnClick="() => OnDislikeRecipe.InvokeAsync(recipe.Recipe)" />

@@ -39,9 +39,16 @@ namespace ASG.Services
             await _httpClient.PostAsJsonAsync("api/mealplanner/dislike", recipe);
         }
 
-        public async Task RegenerateMealPlanAsync(User user, DateTime? weekStartDate = null)
+        public async Task RegenerateMealPlanAsync(User user, DateTime weekStartDate)
         {
-            await _httpClient.PostAsJsonAsync("api/mealplanner/regenerate/mealplan", user);
+            var requestUri = $"api/mealplanner/regenerate/mealplan?weekStartDate={weekStartDate.ToString("o")}";
+            var response = await _httpClient.PostAsJsonAsync(requestUri, user);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // Handle error response
+                throw new Exception("Failed to regenerate meal plan.");
+            }
         }
 
         public async Task LikeRecipeAsync(Recipe recipe)
