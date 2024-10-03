@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ASGShared.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace ASG.Services
 {
@@ -29,10 +30,19 @@ namespace ASG.Services
             return response ?? new MealPlan();
         }
 
-        public async Task ReplaceRecipe(User user, int recipeId)
+        public async Task ReplaceRecipe(User user, int recipeId, DateTime weekStarted)
         {
-            await _httpClient.PostAsJsonAsync($"api/mealplanner/{user.Id}/recipes/{recipeId}/replace", user);
+            var formattedDate = weekStarted.ToString("yyyy-MM-dd");
+            var url = $"api/mealplanner/{user.Id}/mealPlan/{formattedDate}/recipes/{recipeId}/replace";
+
+            var response = await _httpClient.PostAsJsonAsync(url, user);
+
+            // Log the response status
+            Console.WriteLine($"ReplaceRecipe Response Status: {response.StatusCode}");
+
+            response.EnsureSuccessStatusCode();
         }
+
 
         public async Task DislikeRecipeAsync(Recipe recipe)
         {

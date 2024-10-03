@@ -51,8 +51,8 @@ namespace ASGBackend.Controllers
             }
         }
 
-        [HttpPost("{userId}/recipes/{recipeId}/replace")]
-        public async Task<IActionResult> ReplaceRecipe([FromBody] User user, int recipeId) //TODO add week started 
+        [HttpPost("{userId}/mealPlan/{weekStarted}/recipes/{recipeId}/replace")]
+        public async Task<IActionResult> ReplaceRecipe([FromBody] User user, DateTime weekStarted, int recipeId)
         {
             if (user == null || user.Preferences == null || recipeId <= 0 || user.Id == Guid.NewGuid())
             {
@@ -61,7 +61,7 @@ namespace ASGBackend.Controllers
 
             try
             {
-                var newRecipe = await _mealPlanService.ReplaceRecipeAsync(user, recipeId);
+                var newRecipe = await _mealPlanService.ReplaceRecipeAsync(user, recipeId, weekStarted);
                 return Ok(newRecipe);
             }
             catch (Exception ex)

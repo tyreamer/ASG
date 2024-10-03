@@ -49,14 +49,12 @@ namespace ASG.Services
             }
         }
 
-        public async Task<MealPlanRecipe> ReplaceRecipeAsync(User user, int recipeId, DateTime? weekStarted = null)
+        public async Task<MealPlanRecipe> ReplaceRecipeAsync(User user, int recipeId, DateTime weekStarted)
         {
             try
             {
-                var weekStartDate = weekStarted ?? DateTime.Now;
-
                 // Get the user's meal plan
-                var mealPlan = await _mealPlanRepository.GetMealPlanByUserIdAsync(user.Id, weekStartDate);
+                var mealPlan = await _mealPlanRepository.GetMealPlanByUserIdAsync(user.Id, weekStarted);
                 if (mealPlan == null)
                 {
                     throw new Exception("Meal plan not found.");
