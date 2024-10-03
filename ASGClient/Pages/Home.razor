@@ -245,7 +245,7 @@
         try
         {
             var user = await GetUser();
-            await MealPlanClientService.ReplaceRecipe(user, recipe.Id);
+            await MealPlanClientService.ReplaceRecipe(user, recipe.Id, mealPlanStartDate);
             weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(user.Id);
             StateHasChanged();
         }
