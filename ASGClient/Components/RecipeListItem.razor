@@ -1,12 +1,38 @@
 ﻿@using ASGShared.Models
 @using MudBlazor
+@using Blazored.LocalStorage
+@inject ILocalStorageService localStorage
 
 @code {
     [Parameter] public List<MealPlanRecipe> Recipes { get; set; }
+    [Parameter] public string CacheKey { get; set; }
     [Parameter] public DateTime MealPlanStartDate { get; set; }
     [Parameter] public EventCallback OnRegeneratePlan { get; set; }
     [Parameter] public EventCallback<Recipe> OnViewRecipe { get; set; }
     [Parameter] public EventCallback<Recipe> OnDislikeRecipe { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CacheRecipes();
+    }
+
+    private async Task CacheRecipes()
+    {
+        foreach (Recipe recipe in Recipes.Select(r => r.Recipe))
+        {
+            //debugging
+            recipe.Name = recipe.Name + "(cached)";
+        }
+
+        await localStorage.SetItemAsync(CacheKey, Recipes);
+    }
+}
+
+@foreach (var recipe in Recipes)
+{
+    <MudContainer Class="mb-8 recipe-container max-w-screen-md mx-auto">
+        <!-- Recipe display code -->
+    </MudContainer>
 }
 
 @foreach (var recipe in Recipes)
@@ -35,12 +61,6 @@
             <MudGrid Class="mt-2 align-center">
                 <MudItem xs="6" Class="d-flex">
                     <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Info" Size="Size.Small" Class="icon-hover-warning" />
-                    <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" Color="Color.Info" Size="Size.Small" Class="ml-2 icon-hover-warning" OnClick="() => OnDislikeRecipe.InvokeAsync(recipe.Recipe)" />
-                </MudItem>
-                <MudItem xs="6" Class="d-flex justify-end">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" OnClick="() => OnViewRecipe.InvokeAsync(recipe.Recipe)">
-                        VIEW RECIPE
-                    </MudButton>
                 </MudItem>
             </MudGrid>
         </MudPaper>

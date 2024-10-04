@@ -4,6 +4,7 @@ using ASGShared.Models;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http;
 using System.Threading.Tasks;
+using ASG.Models;
 
 namespace ASG.Services
 {
@@ -26,6 +27,27 @@ namespace ASG.Services
         public async Task SignInWithGoogleAsync()
         {
             var firebaseUser = await _firebaseService.SignInWithGoogleAsync();
+
+            if (firebaseUser == null)
+            {
+                // Attempt to get user data from localStorage if offline
+                var userData = await _firebaseService.GetUserFromLocalStorageAsync();
+                if (userData != null)
+                {
+                    firebaseUser = new FirebaseUser
+                    {
+                        Uid = userData["uid"],
+                        DisplayName = userData["displayName"],
+                        PhotoURL = userData["photoURL"],
+                        Email = userData["email"],
+                        EmailVerified = bool.Parse(userData["emailVerified"]),
+                        PhoneNumber = userData["phoneNumber"],
+                        IsAnonymous = bool.Parse(userData["isAnonymous"]),
+                        TenantId = userData["tenantId"]
+                    };
+                }
+            }
+
             if (firebaseUser != null)
             {
                 var isAuthenticated = await _authStateProvider.UserIsAuthenticated(firebaseUser);

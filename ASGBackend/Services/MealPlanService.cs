@@ -32,19 +32,23 @@ namespace ASG.Services
         {
             try
             {
+                _logger.LogInformation($"Fetching meal plan for user {userId} for the week starting on {weekStarted:yyyy-MM-dd}");
+
                 var mealPlan = await _mealPlanRepository.GetMealPlan(userId, weekStarted);
 
                 if (mealPlan != null)
                 {
+                    _logger.LogInformation($"Meal plan found for user {userId} for the week starting on {weekStarted:yyyy-MM-dd}");
                     return mealPlan;
                 }
 
+                _logger.LogWarning($"No meal plan found for user {userId} for the week starting on {weekStarted:yyyy-MM-dd}");
                 // Return an empty list if no meal plan is found
                 return new MealPlan();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting weekly plan");
+                _logger.LogError(ex, $"Error getting weekly plan for user {userId} for the week starting on {weekStarted:yyyy-MM-dd}");
                 throw;
             }
         }
@@ -178,39 +182,50 @@ namespace ASG.Services
 
         public async Task<MealPlan> RegenerateMealPlanAsync(User user, DateTime weekStarted)
         {
-            var mealPlan = await _mealPlanRepository.GetMealPlan(user.Id, weekStarted);
+            var mealPlan = new MealPlan();
 
-            if (mealPlan != null && mealPlan.Recipes?.Count > 0)
+            try
             {
-                mealPlan.Recipes.Clear();
-                await _mealPlanRepository.SaveChangesAsync();
-            }
-            else
-            {
-                // No meal plan for this week yet, create a new one
-                mealPlan = new MealPlan
+                mealPlan = await _mealPlanRepository.GetMealPlan(user.Id, weekStarted);
+
+                if (mealPlan != null && mealPlan.Recipes?.Count > 0)
                 {
-                    UserId = user.Id,
-                    WeekStartDate = weekStarted
-                };
+                    mealPlan.Recipes.Clear();
 
-                // Add the new meal plan to the repository and save to get the generated ID
-                await _mealPlanRepository.AddMealPlanAsync(mealPlan);
+                    await _mealPlanRepository.SaveChangesAsync();
+                }
+                else
+                {
+                    // No meal plan for this week yet, create a new one
+                    mealPlan = new MealPlan
+                    {
+                        UserId = user.Id,
+                        WeekStartDate = weekStarted
+                    };
+
+                    // Add the new meal plan to the repository and save to get the generated ID
+                    await _mealPlanRepository.AddMealPlanAsync(mealPlan);
+                    await _mealPlanRepository.SaveChangesAsync();
+                }
+
+                // Generate new recipes for the meal plan
+                var newRecipes = await GenerateWeeklyRecipes(user);
+
+                // Set MealPlan and MealPlanId for each new recipe
+                foreach (var recipe in newRecipes)
+                {
+                    recipe.MealPlan = mealPlan;
+                    recipe.MealPlanId = mealPlan.Id;
+                }
+
+                mealPlan.Recipes = newRecipes;
                 await _mealPlanRepository.SaveChangesAsync();
             }
-
-            // Generate new recipes for the meal plan
-            var newRecipes = await GenerateWeeklyRecipes(user);
-
-            // Set MealPlan and MealPlanId for each new recipe
-            foreach (var recipe in newRecipes)
+            catch (Exception ex)
             {
-                recipe.MealPlan = mealPlan;
-                recipe.MealPlanId = mealPlan.Id;
-            }
-
-            mealPlan.Recipes = newRecipes;
-            await _mealPlanRepository.SaveChangesAsync();
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+            }            
 
             return mealPlan;
         }
