@@ -228,7 +228,7 @@
         {
             var user = await GetUser();
             await MealPlanClientService.RegenerateMealPlanAsync(user, mealPlanStartDate);
-            await JsRuntime.InvokeVoidAsync("navigator.serviceWorker.controller.postMessage", "update-cache");
+            await NotifyPWACacheRefresh();//important
 
             weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(user.Id, mealPlanStartDate);
         }
@@ -242,6 +242,11 @@
             isRegenerating = false;
             StateHasChanged();
         }
+    }
+
+    private async Task NotifyPWACacheRefresh()
+    {
+        await JsRuntime.InvokeVoidAsync("navigator.serviceWorker.controller.postMessage", "update-cache");
     }
 
     private async Task LikeRecipe(Recipe recipe)
@@ -258,6 +263,7 @@
         {
             var user = await GetUser();
             await MealPlanClientService.ReplaceRecipe(user, recipe.Id, mealPlanStartDate);
+            await NotifyPWACacheRefresh();//important
             weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(user.Id, mealPlanStartDate);
             StateHasChanged();
         }
