@@ -1,5 +1,6 @@
 ﻿@page "/"
 
+@using Blazored.LocalStorage
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
 @using ASGShared.Models
@@ -16,8 +17,10 @@
 @inject MealPlanClientService MealPlanClientService
 @inject UserClientService UserClientService
 @inject IDialogService DialogService
+@inject ILocalStorageService localStorage
 
 <MudContainer Class="bg-gray-50">
+
 
     @if (isLoading)
     {
@@ -83,17 +86,13 @@
                         </MudButton>
                     </MudContainer>
 
-
-
-
-
                     <br />
 
                     <MudDivider></MudDivider>
 
                     <br />
 
-                    <RecipeListItem Recipes="weeklyPlan.Recipes" MealPlanStartDate="mealPlanStartDate" OnRegeneratePlan="ConfirmRegeneratePlan" OnViewRecipe="ViewRecipe" OnDislikeRecipe="ConfirmDislikeRecipe" />
+                    <RecipeListItem Recipes="weeklyPlan.Recipes" MealPlanStartDate="mealPlanStartDate" OnRegeneratePlan="ConfirmRegeneratePlan" OnViewRecipe="ViewRecipe" OnDislikeRecipe="ConfirmDislikeRecipe" CacheKey="@cacheKey"/>
 
                     <MudContainer Class="flex flex-col items-center mb-6">
                         <MudText Typo="Typo.h6" Align="Align.Center">Not feeling this week’s meals? We can cook up some new suggestions!</MudText>
@@ -141,11 +140,13 @@
     [Parameter]
     public DateTime? weekStartDate { get; set; }
 
+    private bool _isOnline = true;
     private DateTime mealPlanStartDate;
     private bool isAuthenticated;
     private bool isLoading = true;
     private bool isRegenerating = false;
     private MealPlan weeklyPlan = new MealPlan();
+    private string cacheKey;
 
     protected override async Task OnInitializedAsync()
     {
@@ -182,8 +183,10 @@
             var userIdClaim = authState.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             if (Guid.TryParse(userIdClaim, out var userId))
             {
+                cacheKey = $"cachedMealPlan_{userId}_{mealPlanStartDate:yyyyMMdd}";
                 mealPlanStartDate = (weekStartDate ?? DateTime.Now).StartOfWeek(DayOfWeek.Sunday);
                 weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(userId, mealPlanStartDate);
+                await localStorage.SetItemAsync(cacheKey, weeklyPlan);
             }
         }
     }
@@ -209,6 +212,13 @@
         throw new InvalidOperationException("User is not authenticated or userId is missing.");
     }
 
+    [JSInvokable]
+    public void UpdateOnlineStatus(bool isOnline)
+    {
+        _isOnline = isOnline;
+        StateHasChanged();
+    }
+
     private async Task RegeneratePlan()
     {
         isRegenerating = true;
@@ -218,18 +228,25 @@
         {
             var user = await GetUser();
             await MealPlanClientService.RegenerateMealPlanAsync(user, mealPlanStartDate);
-            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(user.Id);
+            await NotifyPWACacheRefresh();//important
 
-            StateHasChanged();
+            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(user.Id, mealPlanStartDate);
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
-            // Handle the exception (e.g., show a message to the user)
+            DialogService.ShowMessageBox("Check connection", "You may be offline. Please connect to the internet and try again.");
+            Console.WriteLine(ex.Message);
         }
         finally
         {
             isRegenerating = false;
+            StateHasChanged();
         }
+    }
+
+    private async Task NotifyPWACacheRefresh()
+    {
+        await JsRuntime.InvokeVoidAsync("navigator.serviceWorker.controller.postMessage", "update-cache");
     }
 
     private async Task LikeRecipe(Recipe recipe)
@@ -246,7 +263,8 @@
         {
             var user = await GetUser();
             await MealPlanClientService.ReplaceRecipe(user, recipe.Id, mealPlanStartDate);
-            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(user.Id);
+            await NotifyPWACacheRefresh();//important
+            weeklyPlan = await MealPlanClientService.GetWeeklyPlanAsync(user.Id, mealPlanStartDate);
             StateHasChanged();
         }
         catch (InvalidOperationException ex)

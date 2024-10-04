@@ -84,7 +84,7 @@ namespace ASG.Services
             var user = await _localStorage.GetItemAsync<Dictionary<string, string>>("ASGUser");
             if (user == null)
             {
-                throw new InvalidOperationException("No user found in local storage.");
+                Console.WriteLine("Firebase: No user found in local storage.");
             }
             return user;
         }

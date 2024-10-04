@@ -17,8 +17,23 @@ const auth = getAuth(app);
 
 console.log("Firebase initialized");
 
+async function isOffline() {
+    try {
+        // Perform a lightweight request to check connectivity.
+        const response = await fetch("https://www.google.com", { method: 'HEAD', mode: 'no-cors' });
+        return false;  // Online, because the request succeeded.
+    } catch (error) {
+        return true;  // Offline, because the request failed.
+    }
+}
+
 window.firebaseAuth = {
     signInWithGoogle: async function () {
+        if (await isOffline()) {
+            console.log("Offline mode: Unable to sign in with Google.");
+            return null;
+        }
+
         const provider = new GoogleAuthProvider();
         try {
             const result = await signInWithPopup(auth, provider);
@@ -55,51 +70,13 @@ window.firebaseAuth = {
                         enrolledFactors: user.multiFactor.enrolledFactors
                     } : null
                 };
-                localStorage.setItem('ASGUser', JSON.stringify(userData));
-                startTokenValidationCheck(userData);
                 return userData;
             } else {
-                console.error("User is null after sign-in");
+                console.error("No user found after sign-in.");
                 return null;
             }
         } catch (error) {
-            console.error("Error signing in with Google: ", error);
-            return null;
-        }
-    },
-
-    signOut: async function () {
-        try {
-            await signOut(auth);
-            localStorage.removeItem('ASGUser');
-        } catch (error) {
-            console.error("Error signing out: ", error);
-        }
-    },
-
-    isTokenValid: function (expirationTime) {
-        const currentTime = new Date().toISOString();
-        return currentTime < expirationTime;
-    },
-
-    refreshToken: async function () {
-        try {
-            const user = auth.currentUser;
-
-            if (user) {
-                const token = await user.getIdToken(true); // Force refresh
-                const tokenResult = await user.getIdTokenResult();
-                return {
-                    accessToken: token,
-                    expirationTime: tokenResult.expirationTime,
-                    refreshToken: tokenResult.refreshToken
-                };
-            } else {
-                console.error("Current user is null");
-                return null;
-            }
-        } catch (error) {
-            console.error("Error refreshing token: ", error);
+            console.error("Error during sign-in with Google: ", error);
             return null;
         }
     }
