@@ -65,19 +65,19 @@ jobs:
       # Decode the base64-encoded Firebase credentials and write them to a JSON file
       - name: Decode Firebase credentials
         run: |
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}" | base64 --decode > ./ASGBackend/firebase_credentials.json
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}" | base64 --decode > ./firebase_credentials.json
         shell: bash
 
-      - name: Verify Base64 Decoding
+      - name: Verify Base64 Decoding (First 50 characters)
         run: |
-          echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }} | base64 --decode
+          echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }} | base64 --decode | head -c 50
         shell: bash
 
       # Set GOOGLE_APPLICATION_CREDENTIALS to point to the created JSON file and deploy
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: $GITHUB_WORKSPACE/firebase_credentials.json
+          GOOGLE_APPLICATION_CREDENTIALS: /home/site/wwwroot/firebase_credentials.json
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'anythingsoundsgood'
