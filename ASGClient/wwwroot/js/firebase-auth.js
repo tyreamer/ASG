@@ -33,7 +33,6 @@ window.firebaseAuth = {
             console.log("Offline mode: Unable to sign in with Google.");
             return null;
         }
-
         const provider = new GoogleAuthProvider();
         try {
             const result = await signInWithPopup(auth, provider);
@@ -70,12 +69,48 @@ window.firebaseAuth = {
                         enrolledFactors: user.multiFactor.enrolledFactors
                     } : null
                 };
+                localStorage.setItem('ASGUser', JSON.stringify(userData));
+                startTokenValidationCheck(userData);
                 return userData;
             } else {
+                console.error("User is null after sign-in");
+                return null;
+            }
+        } catch (error) {
+            console.error("Error signing in with Google: ", error);
+            return null;
+        }
+    },
+    signOut: async function () {
+        try {
+            await signOut(auth);
+            localStorage.removeItem('ASGUser');
+        } catch (error) {
+            console.error("Error signing out: ", error);
+        }
+    },
+    isTokenValid: function (expirationTime) {
+        const currentTime = new Date().toISOString();
+        return currentTime < expirationTime;
+    },
+    refreshToken: async function () {
+        try {
+            const user = auth.currentUser;
+            if (user) {
+                const token = await user.getIdToken(true); // Force refresh
+                const tokenResult = await user.getIdTokenResult();
+                return {
+                    accessToken: token,
+                    expirationTime: tokenResult.expirationTime,
+                    refreshToken: tokenResult.refreshToken
+                };
+            } else {
+                console.error("Current user is null");
                 console.error("No user found after sign-in.");
                 return null;
             }
         } catch (error) {
+            console.error("Error refreshing token: ", error);
             console.error("Error during sign-in with Google: ", error);
             return null;
         }
@@ -120,8 +155,8 @@ window.addEventListener('load', () => {
                     userData = JSON.parse(storedUser);
 
                     // Check if StsTokenManager is defined
-                    if (!userData.StsTokenManager) {
-                        console.error("StsTokenManager is undefined in userData");
+                    if (!userData.stsTokenManager) {
+                        console.error("stsTokenManager is undefined in userData");
                         return;
                     }
 
@@ -130,7 +165,8 @@ window.addEventListener('load', () => {
                     await window.firebaseAuth.signOut();
                     return;
                 }
-                const expirationTime = new Date(userData.StsTokenManager.ExpirationTime);
+
+                const expirationTime = new Date(userData.stsTokenManager.expirationTime);
 
                 if (window.firebaseAuth.isTokenValid(expirationTime)) {
                     startTokenValidationCheck(userData);
@@ -138,9 +174,9 @@ window.addEventListener('load', () => {
                 else {
                     const refreshedToken = await window.firebaseAuth.refreshToken();
                     if (refreshedToken) {
-                        userData.StsTokenManager.AccessToken = refreshedToken.accessToken;
-                        userData.StsTokenManager.ExpirationTime = refreshedToken.expirationTime;
-                        userData.StsTokenManager.RefreshToken = refreshedToken.refreshToken;
+                        userData.stsTokenManager.AccessToken = refreshedToken.accessToken;
+                        userData.stsTokenManager.ExpirationTime = refreshedToken.expirationTime;
+                        userData.stsTokenManager.RefreshToken = refreshedToken.refreshToken;
                         localStorage.setItem('ASGUser', JSON.stringify(userData));
                         startTokenValidationCheck(userData);
                     }
