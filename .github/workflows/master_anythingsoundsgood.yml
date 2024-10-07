@@ -62,4 +62,10 @@ jobs:
           app-name: 'anythingsoundsgood'
           slot-name: 'Production'
           package: .
+
+      - name: Set environment variables
+        env:
+          ASG_DB_PW: ${{ secrets.ASG_DB_PW }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           
