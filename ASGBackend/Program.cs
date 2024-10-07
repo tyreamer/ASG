@@ -58,14 +58,14 @@ builder.Services.AddSingleton<GeminiService>(provider =>
 });
 
 // Register AIAgentService with dependencies
-builder.Services.AddSingleton(new MLContext());
-builder.Services.AddHttpClient();
-builder.Services.AddScoped<AIAgentService>();
-builder.Services.AddScoped<UserClusteringAgent>();
-builder.Services.AddScoped<RecipeClusteringAgent>();
+//builder.Services.AddSingleton(new MLContext());
+//builder.Services.AddHttpClient();
+//builder.Services.AddScoped<AIAgentService>();
+//builder.Services.AddScoped<UserClusteringAgent>();
+//builder.Services.AddScoped<RecipeClusteringAgent>();
 
 //Model Training
-builder.Services.AddHostedService<ModelTrainingBackgroundService>();
+//builder.Services.AddHostedService<ModelTrainingBackgroundService>();
 
 builder.Services.AddScoped<MealPlanService>();
 builder.Services.AddScoped<UserService>();
@@ -76,9 +76,20 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IMealPlanRepository, MealPlanRepository>();
 
 // Database
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") + ";TrustServerCertificate=True"));
+}
+else
+{
+    var connectionString = Environment.GetEnvironmentVariable("ASG_DB_CONNECTION_STRING");
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString + ";TrustServerCertificate=True"));
 //TODO: update with cert
+}
+
+   
 
 
 builder.Services.AddControllers();
@@ -87,10 +98,6 @@ builder.Services.AddControllers();
 if (builder.Environment.IsDevelopment())
 {
     builder.WebHost.UseUrls("http://localhost:5050", "https://localhost:5051");
-}
-else
-{
-    builder.WebHost.UseUrls("http://*:80", "https://*:443");
 }
 
 // Add CORS policy
