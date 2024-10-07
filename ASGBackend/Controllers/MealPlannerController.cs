@@ -15,18 +15,15 @@ namespace ASGBackend.Controllers
     [Route("api/[controller]")]
     public class MealPlannerController : ControllerBase
     {
-        private readonly AIAgentService _aiAgentService;
         private readonly IRecipeRepository _recipeRepository;
         private readonly MealPlanService _mealPlanService;
         private readonly ILogger<MealPlannerController> _logger;
 
         public MealPlannerController(
-            AIAgentService aiAgentService,
             IRecipeRepository recipeRepository,
             MealPlanService mealPlanService,
             ILogger<MealPlannerController> logger)
         {
-            _aiAgentService = aiAgentService;
             _recipeRepository = recipeRepository;
             _mealPlanService = mealPlanService;
             _logger = logger;

@@ -17,12 +17,12 @@ namespace ASG.Services
             _httpClient = httpClient;
         }
 
-        public async Task<MealPlan> GetWeeklyPlanAsync(Guid userId, DateTime? weekStartDate = null)
+        public async Task<MealPlan> GetWeeklyPlanAsync(Guid userId, DateTime weekStartDate)
         {
             var request = $"api/mealplanner/weekly?userId={userId}";
 
             if (weekStartDate != null) {
-                request += "&weekStartDate=" + weekStartDate;
+                request += "&weekStartDate=" + weekStartDate.ToString("yyyy-MM-dd");
             }
 
             var response = await _httpClient.GetFromJsonAsync<MealPlan>(request);

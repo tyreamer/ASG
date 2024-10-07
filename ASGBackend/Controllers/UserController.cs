@@ -11,14 +11,12 @@ namespace ASGBackend.Controllers
     [Route("api/users")]
     public class UserController : ControllerBase
     {
-        private readonly AIAgentService _aiAgentService;
         private readonly IUserRepository _userRepository;
         private readonly ILogger<UserController> _logger;
         private readonly UserService _userService;
 
-        public UserController(AIAgentService aiAgentService, IUserRepository userRepository, ILogger<UserController> logger, UserService userService)
+        public UserController(IUserRepository userRepository, ILogger<UserController> logger, UserService userService)
         {
-            _aiAgentService = aiAgentService;
             _userRepository = userRepository;
             _logger = logger;
             _userService = userService;
