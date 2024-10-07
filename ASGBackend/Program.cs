@@ -58,14 +58,14 @@ builder.Services.AddSingleton<GeminiService>(provider =>
 });
 
 // Register AIAgentService with dependencies
-builder.Services.AddSingleton(new MLContext());
-builder.Services.AddHttpClient();
-builder.Services.AddScoped<AIAgentService>();
-builder.Services.AddScoped<UserClusteringAgent>();
-builder.Services.AddScoped<RecipeClusteringAgent>();
+//builder.Services.AddSingleton(new MLContext());
+//builder.Services.AddHttpClient();
+//builder.Services.AddScoped<AIAgentService>();
+//builder.Services.AddScoped<UserClusteringAgent>();
+//builder.Services.AddScoped<RecipeClusteringAgent>();
 
 //Model Training
-builder.Services.AddHostedService<ModelTrainingBackgroundService>();
+//builder.Services.AddHostedService<ModelTrainingBackgroundService>();
 
 builder.Services.AddScoped<MealPlanService>();
 builder.Services.AddScoped<UserService>();
@@ -98,10 +98,6 @@ builder.Services.AddControllers();
 if (builder.Environment.IsDevelopment())
 {
     builder.WebHost.UseUrls("http://localhost:5050", "https://localhost:5051");
-}
-else
-{
-    builder.WebHost.UseUrls("http://*:80", "https://*:443");
 }
 
 // Add CORS policy
