@@ -55,6 +55,23 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_87B8B694548D4E7FA66A1D58734A8DCC }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4E5F9F6FBC904078A687C0EF342EDEB6 }}
 
+      - name: Set environment variables
+        env:
+          ASG_DB_PW: ${{ secrets.ASG_DB_PW }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS_B64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
+
+      # Decode the base64-encoded Firebase credentials and write them to a JSON file
+      - name: Decode Firebase credentials
+        run: |
+          echo $GOOGLE_APPLICATION_CREDENTIALS_B64 | base64 --decode > $GITHUB_WORKSPACE/firebase_credentials.json
+        shell: bash
+
+      # Set GOOGLE_APPLICATION_CREDENTIALS to point to the created JSON file
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS environment variable
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: $GITHUB_WORKSPACE/firebase_credentials.json
+      
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -62,10 +79,4 @@ jobs:
           app-name: 'anythingsoundsgood'
           slot-name: 'Production'
           package: .
-
-      - name: Set environment variables
-        env:
-          ASG_DB_PW: ${{ secrets.ASG_DB_PW }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           
