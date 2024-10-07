@@ -65,7 +65,7 @@ jobs:
       # Decode the base64-encoded Firebase credentials and write them to a JSON file
       - name: Decode Firebase credentials
         run: |
-          echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }} | base64 --decode > ./ASGBackend/firebase_credentials.json
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}" | base64 --decode > ./ASGBackend/firebase_credentials.json
         shell: bash
 
       - name: Verify Base64 Decoding
