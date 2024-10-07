@@ -76,9 +76,20 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IMealPlanRepository, MealPlanRepository>();
 
 // Database
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") + ";TrustServerCertificate=True"));
+}
+else
+{
+    var connectionString = Environment.GetEnvironmentVariable("ASG_DB_CONNECTION_STRING");
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString + ";TrustServerCertificate=True"));
 //TODO: update with cert
+}
+
+   
 
 
 builder.Services.AddControllers();
