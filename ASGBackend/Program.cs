@@ -15,20 +15,6 @@ var builder = WebApplication.CreateBuilder(args);
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
-// Get the path to the Firebase Admin SDK JSON file from the environment variable
-//var firebaseCredentialPath = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
-
-//if (string.IsNullOrEmpty(firebaseCredentialPath))
-//{
-//    throw new InvalidOperationException("The GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.");
-//}
-
-// Initialize Firebase Admin SDK
-//FirebaseApp.Create(new AppOptions()
-//{
-//    Credential = GoogleCredential.FromFile(firebaseCredentialPath)
-//});
-
 // Retrieve the Gemini API key from environment variables
 var geminiApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
 if (string.IsNullOrEmpty(geminiApiKey))
