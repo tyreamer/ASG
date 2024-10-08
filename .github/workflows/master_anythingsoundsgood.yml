@@ -36,10 +36,10 @@ jobs:
         run: dotnet publish ./ASGClient/ASGClient.csproj -c Release -o ./ASGClient
 
       # Copy Blazor Frontend to Backend's wwwroot using PowerShell Copy-Item
-      - name: Copy Blazor Frontend to Backend's wwwroot
+      - name: Copy Blazor Frontend to Backend's wwwroot using PowerShell Copy-Item
         run: |
           Write-Host "Copying Blazor frontend to Backend wwwroot"
-          Copy-Item -Path ./ASGClient/* -Destination ./ASGBackend/wwwroot/ -Recurse -Force
+          Copy-Item -Path ./ASGClient -Destination ./ASGBackend/wwwroot -Recurse -Force
           Write-Host "Copy complete"
 
       # Upload artifact for deployment job (Backend with Blazor frontend inside wwwroot)
