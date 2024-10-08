@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: anythingsoundsgood backend
 
 on:
@@ -16,16 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Debugging step to list directory structure
+      - name: List files for debugging
+        run: ls -R
+
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release ./ASGBackend/ASGBackend.csproj  # Build the backend project
+        run: dotnet build --configuration Release ./ASGBackend/ASGBackend.csproj  # Adjust path if needed
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ./ASGBackend ./ASGBackend/ASGBackend.csproj  # Publish the backend project
+        run: dotnet publish -c Release -o ./ASGBackend ./ASGBackend/ASGBackend.csproj  # Adjust path if needed
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -66,7 +67,7 @@ jobs:
 
       # Apply EF Migrations
       - name: Apply EF Migrations
-        run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING --project ./ASGBackend/ASGBackend.csproj
+        run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING --project ./ASGBackend/ASGBackend.csproj  # Adjust path if needed
         env:
           ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
 
