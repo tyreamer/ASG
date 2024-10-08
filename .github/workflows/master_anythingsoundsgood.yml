@@ -29,17 +29,17 @@ jobs:
 
       # Publish the Backend (ASGBackend)
       - name: Publish Backend
-        run: dotnet publish ./ASGBackend/ASGBackend.csproj -c Release -o ./ASGBackend
+        run: dotnet publish ./ASGBackend/ASGBackend.csproj -c Release -o ./publish/ASGBackend
 
       # Publish the Blazor WebAssembly (ASGClient)
       - name: Publish Blazor WebAssembly
-        run: dotnet publish ./ASGClient/ASGClient.csproj -c Release -o ./ASGClient
+        run: dotnet publish ./ASGClient/ASGClient.csproj -c Release -o ./publish/ASGClient
 
       # Copy Blazor Frontend to Backend's wwwroot using PowerShell Copy-Item
       - name: Copy Blazor Frontend to Backend's wwwroot using PowerShell Copy-Item
         run: |
           Write-Host "Copying Blazor frontend to Backend wwwroot"
-          Copy-Item -Path ./ASGClient -Destination ./ASGBackend/wwwroot -Recurse -Force
+          Copy-Item -Path ./publish/ASGClient/* -Destination ./publish/ASGBackend/wwwroot/ -Recurse -Force
           Write-Host "Copy complete"
 
       # Upload artifact for deployment job (Backend with Blazor frontend inside wwwroot)
@@ -47,8 +47,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: ./ASGBackend
-          
+          path: ./publish/ASGBackend
+
   deploy:
     runs-on: windows-latest
     needs: build
@@ -63,6 +63,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: .net-app
+          path: ./  # Download the artifact into the working directory
       
       - name: Login to Azure
         uses: azure/login@v2
@@ -71,17 +72,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_87B8B694548D4E7FA66A1D58734A8DCC }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4E5F9F6FBC904078A687C0EF342EDEB6 }}
 
-      - name: Set environment variables
-        env:
-          ASG_DB_PW: ${{ secrets.ASG_DB_PW }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GOOGLE_APPLICATION_CREDENTIALS_B64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
-        run: echo "Environment variables set."
-
       # Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'anythingsoundsgood'
           slot-name: 'Production'
-          package: ./ASGBackend
+          package: ./publish/ASGBackend
