@@ -42,13 +42,6 @@ jobs:
           Copy-Item -Path ./publish/ASGClient/* -Destination ./publish/ASGBackend/wwwroot/ -Recurse -Force
           Write-Host "Copy complete"
 
-      # List files in the publish directory for debugging
-      - name: List files in publish directory
-        run: |
-          Write-Host "Listing files in ./publish/ASGBackend"
-          ls ./publish/ASGBackend
-          Write-Host "Listing complete"
-
       # Upload artifact for deployment job (Backend with Blazor frontend inside wwwroot)
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -70,12 +63,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: net-app
+          path: ./deploy  # Download artifact into the 'deploy' directory
 
-      # Debugging - List files after artifact download to verify the contents
+      # List downloaded files for debugging
       - name: List downloaded files
         run: |
           Write-Host "Listing downloaded artifact files"
-          ls net-app
+          ls ./deploy
           Write-Host "Listing complete"
 
       - name: Login to Azure
@@ -91,4 +85,4 @@ jobs:
         with:
           app-name: 'anythingsoundsgood'
           slot-name: 'Production'
-          package: net-app
+          package: ./deploy
