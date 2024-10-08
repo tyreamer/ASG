@@ -31,13 +31,16 @@ jobs:
       - name: Publish Backend
         run: dotnet publish ./ASGBackend/ASGBackend.csproj -c Release -o ./ASGBackend
 
-      # Publish the Blazor WebAssembly (ASGClient) - Output into a separate folder
+      # Publish the Blazor WebAssembly (ASGClient)
       - name: Publish Blazor WebAssembly
         run: dotnet publish ./ASGClient/ASGClient.csproj -c Release -o ./ASGClient
 
-      # Copy Blazor Frontend (ASGClient) to Backend's wwwroot so it can be served
+      # Copy Blazor Frontend to Backend's wwwroot using PowerShell Copy-Item
       - name: Copy Blazor Frontend to Backend's wwwroot
-        run: cp -r ./ASGClient/* ./ASGBackend/wwwroot/
+        run: |
+          Write-Host "Copying Blazor frontend to Backend wwwroot"
+          Copy-Item -Path ./ASGClient/* -Destination ./ASGBackend/wwwroot/ -Recurse -Force
+          Write-Host "Copy complete"
 
       # Upload artifact for deployment job (Backend with Blazor frontend inside wwwroot)
       - name: Upload artifact for deployment job
@@ -45,7 +48,7 @@ jobs:
         with:
           name: .net-app
           path: ./ASGBackend
-
+          
   deploy:
     runs-on: windows-latest
     needs: build
