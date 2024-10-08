@@ -61,14 +61,15 @@ jobs:
           ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
         run: echo "Environment variables set."
 
-      # Apply EF Migrations to Update Azure SQL Schema
+      # Install EF Tools
       - name: Install EF Tools
         run: dotnet tool install --global dotnet-ef
 
-      # Apply EF Migrations with correct working directory
+      # Apply EF Migrations without using working-directory
       - name: Apply EF Migrations
-        run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING
-        working-directory: ASGBackend  # Correct working directory
+        run: |
+          cd ASGBackend  # Change directory to ASGBackend
+          dotnet ef database update --connection $ASG_DB_CONNECTION_STRING
         env:
           ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
 
