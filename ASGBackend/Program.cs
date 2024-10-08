@@ -86,46 +86,20 @@ builder.Services.AddControllers();
 if (builder.Environment.IsDevelopment())
 {
     builder.WebHost.UseUrls("http://localhost:5050", "https://localhost:5051");
-
-    // Add CORS policy
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("AllowAll",
-            builder =>
-            {
-                builder.AllowAnyOrigin()
-                       .AllowAnyMethod()
-                       .AllowAnyHeader();
-            });
-    });
-}
-else
-{
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("AllowSpecificOrigin",
-            builder =>
-            {
-                builder.WithOrigins("https://brave-field-02c485c0f.5.azurestaticapps.net")
-                       .AllowAnyMethod()
-                       .AllowAnyHeader();
-            });
-    });
 }
 
-if (builder.Environment.IsProduction())
+
+// Add CORS policy
+builder.Services.AddCors(options =>
 {
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("AllowSpecificOrigin",
-            builder =>
-            {
-                builder.WithOrigins("https://brave-field-02c485c0f.5.azurestaticapps.net")
-                       .AllowAnyMethod()
-                       .AllowAnyHeader();
-            });
-    });
-}
+    options.AddPolicy("AllowAll",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
 
 
 var app = builder.Build();
@@ -148,16 +122,18 @@ else
     app.UseHttpsRedirection();
 }
 
-app.UseAuthorization();
 
 if (builder.Environment.IsProduction())
 {
-    app.UseCors("AllowSpecificOrigin");
+    app.UseCors("AllowAll");
 }
 else
 {
     app.UseCors("AllowAll");
 }
+
+app.UseAuthorization();
+
 
 app.MapControllers();
 
