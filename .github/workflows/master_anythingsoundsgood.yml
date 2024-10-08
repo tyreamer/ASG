@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy ASP.Net Core app to Azure Web App - anythingsoundsgood
+name: Build and Deploy Full Stack App to Azure Web App - anythingsoundsgood
 
 on:
   push:
@@ -16,22 +13,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Step 1: Set up .NET Core environment
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
 
-      - name: Build with dotnet
+      # Step 2: Restore dependencies for all projects (Backend, Blazor, Shared)
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      # Step 3: Build all projects (Backend, Blazor, Shared)
+      - name: Build Solution
         run: dotnet build --configuration Release
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ./ASGBackend
+      # Step 4: Publish the Backend (ASGBackend)
+      - name: Publish Backend
+        run: dotnet publish ./ASGBackend/ASGBackend.csproj -c Release -o ./publish/Backend
 
+      # Step 5: Publish Blazor WebAssembly Frontend (ASGClient)
+      - name: Publish Blazor WebAssembly
+        run: dotnet publish ./ASGClient/ASGClient.csproj -c Release -o ./publish/Client
+
+      # Step 6: Copy Blazor Frontend to Backend's wwwroot
+      - name: Copy Blazor Frontend to Backend's wwwroot
+        run: cp -r ./publish/Client/* ./publish/Backend/wwwroot/
+
+      # Step 7: Upload artifact for deployment
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: ./ASGBackend
+          path: ./publish/Backend
 
   deploy:
     runs-on: windows-latest
@@ -40,7 +53,7 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write # Required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
@@ -61,3 +74,11 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GOOGLE_APPLICATION_CREDENTIALS_B64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
         run: echo "Environment variables set."
+
+      # Step 8: Deploy to Azure Web App
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'anythingsoundsgood'
+          slot-name: 'Production'
+          package: ./publish/Backend
