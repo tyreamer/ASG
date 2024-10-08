@@ -13,10 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Debugging step (optional, can be removed once confirmed)
-      - name: List files for debugging
-        run: ls -R
-
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
@@ -60,16 +56,6 @@ jobs:
         env:
           ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
         run: echo "Environment variables set."
-
-      # Install EF Tools
-      - name: Install EF Tools
-        run: dotnet tool install --global dotnet-ef
-
-      # Apply EF Migrations using full path
-      - name: Apply EF Migrations
-        run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING --project D:/a/ASG/ASG/ASGBackend/ASGBackend.csproj
-        env:
-          ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
 
       # Decode the base64-encoded Firebase credentials and write them to a JSON file
       - name: Decode Firebase credentials
