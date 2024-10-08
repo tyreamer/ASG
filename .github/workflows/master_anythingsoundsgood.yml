@@ -58,8 +58,16 @@ jobs:
       - name: Set environment variables
         env:
           ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: echo "Environment variables set."
+
+      # Apply EF Migrations to Update Azure SQL Schema
+      - name: Install EF Tools
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Apply EF Migrations
+        run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING
+        env:
+          ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
 
       # Decode the base64-encoded Firebase credentials and write them to a JSON file
       - name: Decode Firebase credentials
@@ -72,6 +80,7 @@ jobs:
         id: deploy-to-webapp
         env:
           GOOGLE_APPLICATION_CREDENTIALS: $GITHUB_WORKSPACE/firebase_credentials.json
+          ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'anythingsoundsgood'
