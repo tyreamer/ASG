@@ -26,7 +26,7 @@ builder.Services.AddHttpClient("ASGClient", client =>
 {
     client.BaseAddress = isDevelopment
     ? new Uri("http://localhost:5050")  // For local development
-    : new Uri("https://anythingsoundsgood-dmfwewbfd3esa4ey.canadaeast-01.azurewebsites.net");  // For production
+    : new Uri(builder.HostEnvironment.BaseAddress);  // For production
 });
 
 
