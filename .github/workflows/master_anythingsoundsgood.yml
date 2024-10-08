@@ -65,10 +65,10 @@ jobs:
       - name: Install EF Tools
         run: dotnet tool install --global dotnet-ef
 
-      # Apply EF Migrations with working directory set
+      # Apply EF Migrations with correct working directory
       - name: Apply EF Migrations
         run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING
-        working-directory: ./ASGBackend  # Set working directory to ASGBackend
+        working-directory: ASGBackend  # Correct working directory
         env:
           ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
 
