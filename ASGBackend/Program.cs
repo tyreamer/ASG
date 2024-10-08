@@ -148,7 +148,6 @@ else
     app.UseHttpsRedirection();
 }
 
-app.UseAuthorization();
 
 if (builder.Environment.IsProduction())
 {
@@ -158,6 +157,9 @@ else
 {
     app.UseCors("AllowAll");
 }
+
+app.UseAuthorization();
+
 
 app.MapControllers();
 

@@ -106,12 +106,10 @@ window.firebaseAuth = {
                 };
             } else {
                 console.error("Current user is null");
-                console.error("No user found after sign-in.");
                 return null;
             }
         } catch (error) {
             console.error("Error refreshing token: ", error);
-            console.error("Error during sign-in with Google: ", error);
             return null;
         }
     }
