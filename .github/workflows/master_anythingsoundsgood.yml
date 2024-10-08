@@ -22,10 +22,10 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release
+        run: dotnet build --configuration Release ./ASGBackend/ASGBackend.csproj  # Build the backend project
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ./ASGBackend
+        run: dotnet publish -c Release -o ./ASGBackend ./ASGBackend/ASGBackend.csproj  # Publish the backend project
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -64,8 +64,9 @@ jobs:
       - name: Install EF Tools
         run: dotnet tool install --global dotnet-ef
 
+      # Apply EF Migrations
       - name: Apply EF Migrations
-        run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING
+        run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING --project ./ASGBackend/ASGBackend.csproj
         env:
           ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
 
