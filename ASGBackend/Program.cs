@@ -113,6 +113,20 @@ else
     });
 }
 
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowSpecificOrigin",
+            builder =>
+            {
+                builder.WithOrigins("https://brave-field-02c485c0f.5.azurestaticapps.net")
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            });
+    });
+}
+
 
 var app = builder.Build();
 
@@ -135,7 +149,16 @@ else
 }
 
 app.UseAuthorization();
-app.UseCors("AllowAll");
+
+if (builder.Environment.IsProduction())
+{
+    app.UseCors("AllowSpecificOrigin");
+}
+else
+{
+    app.UseCors("AllowAll");
+}
+
 app.MapControllers();
 
 app.Run();
