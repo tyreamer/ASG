@@ -10,14 +10,14 @@ namespace ASG.Services
 {
     public class AuthenticationService
     {
-        private readonly FirebaseService _firebaseService;
+        private readonly FirebaseClientService _firebaseClientService;
         private readonly ASGAuthenticationStateProvider _authStateProvider;
         private readonly NavigationManager _navigation;
         private readonly UserClientService _userClientService;
 
-        public AuthenticationService(FirebaseService firebaseService, AuthenticationStateProvider authStateProvider, NavigationManager navigation, UserClientService userClientService)
+        public AuthenticationService(FirebaseClientService firebaseClientService, AuthenticationStateProvider authStateProvider, NavigationManager navigation, UserClientService userClientService)
         {
-            _firebaseService = firebaseService;
+            _firebaseClientService = firebaseClientService;
             _authStateProvider = authStateProvider as ASGAuthenticationStateProvider
                                  ?? throw new ArgumentException("Invalid AuthenticationStateProvider");
             _navigation = navigation;
@@ -26,12 +26,12 @@ namespace ASG.Services
 
         public async Task SignInWithGoogleAsync()
         {
-            var firebaseUser = await _firebaseService.SignInWithGoogleAsync();
+            var firebaseUser = await _firebaseClientService.SignInWithGoogleAsync();
 
             if (firebaseUser == null)
             {
                 // Attempt to get user data from localStorage if offline
-                var userData = await _firebaseService.GetUserFromLocalStorageAsync();
+                var userData = await _firebaseClientService.GetUserFromLocalStorageAsync();
                 if (userData != null)
                 {
                     firebaseUser = new FirebaseUser
