@@ -29,25 +29,32 @@ jobs:
 
       # Publish the Backend (ASGBackend)
       - name: Publish Backend
-        run: dotnet publish ./ASGBackend/ASGBackend.csproj -c Release -o ${{ github.workspace }}/publish/ASGBackend
+        run: dotnet publish ./ASGBackend/ASGBackend.csproj -c Release -o ./publish/ASGBackend
 
       # Publish the Blazor WebAssembly (ASGClient)
       - name: Publish Blazor WebAssembly
-        run: dotnet publish ./ASGClient/ASGClient.csproj -c Release -o ${{ github.workspace }}/publish/ASGClient
+        run: dotnet publish ./ASGClient/ASGClient.csproj -c Release -o ./publish/ASGClient
 
       # Copy Blazor Frontend to Backend's wwwroot using PowerShell Copy-Item
       - name: Copy Blazor Frontend to Backend's wwwroot using PowerShell Copy-Item
         run: |
           Write-Host "Copying Blazor frontend to Backend wwwroot"
-          Copy-Item -Path ${{ github.workspace }}/publish/ASGClient/* -Destination ${{ github.workspace }}/publish/ASGBackend/wwwroot/ -Recurse -Force
+          Copy-Item -Path ./publish/ASGClient/* -Destination ./publish/ASGBackend/wwwroot/ -Recurse -Force
           Write-Host "Copy complete"
+
+      # List files in the publish directory for debugging
+      - name: List files in publish directory
+        run: |
+          Write-Host "Listing files in ./publish/ASGBackend"
+          ls ./publish/ASGBackend
+          Write-Host "Listing complete"
 
       # Upload artifact for deployment job (Backend with Blazor frontend inside wwwroot)
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{ github.workspace }}/publish/ASGBackend
+          name: net-app
+          path: ./publish/ASGBackend
 
   deploy:
     runs-on: windows-latest
@@ -62,8 +69,14 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
-          path: ${{ github.workspace }}
+          name: net-app
+
+      # Debugging - List files after artifact download to verify the contents
+      - name: List downloaded files
+        run: |
+          Write-Host "Listing downloaded artifact files"
+          ls net-app
+          Write-Host "Listing complete"
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -78,4 +91,4 @@ jobs:
         with:
           app-name: 'anythingsoundsgood'
           slot-name: 'Production'
-          package: ${{ github.workspace }}/publish/ASGBackend
+          package: net-app
