@@ -24,14 +24,15 @@ var isDevelopment = builder.HostEnvironment.IsDevelopment();
 
 builder.Services.AddHttpClient("ASGClient", client =>
 {
-    client.BaseAddress = isDevelopment ? new Uri("http://localhost:5050") : new Uri("anythingsoundsgood-dmfwewbfd3esa4ey.canadaeast-01.azurewebsites.net");
+    client.BaseAddress = isDevelopment
+    ? new Uri("http://localhost:5050")  // For local development
+    : new Uri("https://anythingsoundsgood-dmfwewbfd3esa4ey.canadaeast-01.azurewebsites.net");  // For production
 });
 
 
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("ASGClient"));
 builder.Services.AddScoped<MealPlanClientService>();
 builder.Services.AddScoped<UserClientService>();
-builder.Services.AddMudServices();
 builder.Services.AddMudBlazorDialog();
 
 await builder.Build().RunAsync();
