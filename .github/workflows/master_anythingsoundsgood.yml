@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Debugging step (optional, can be removed once confirmed)
+      # Debugging step to confirm paths (optional)
       - name: List files for debugging
         run: ls -R
 
@@ -41,7 +41,7 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write
 
     steps:
       - name: Download artifact from build job
@@ -52,9 +52,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D2F3C866E6594F5C9D00AF0CE9FD7B31 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_87B8B694548D4E7FA66A1D58734A8DCC }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4E5F9F6FBC904078A687C0EF342EDEB6 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
 
       - name: Set environment variables
         env:
@@ -67,22 +67,20 @@ jobs:
 
       # Apply EF Migrations using full path
       - name: Apply EF Migrations
-        run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING --project ${{ github.workspace }}/ASGBackend/ASGBackend.csproj
+        run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING --project D:/a/ASG/ASG/ASGBackend/ASGBackend.csproj
         env:
           ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
 
-      # Decode the base64-encoded Firebase credentials and write them to a JSON file
+      # Decode Firebase credentials and deploy
       - name: Decode Firebase credentials
         run: |
           echo $GOOGLE_APPLICATION_CREDENTIALS_B64 | base64 --decode > $GITHUB_WORKSPACE/firebase_credentials.json
         shell: bash
 
-      # Set GOOGLE_APPLICATION_CREDENTIALS to point to the created JSON file and deploy
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         env:
           GOOGLE_APPLICATION_CREDENTIALS: $GITHUB_WORKSPACE/firebase_credentials.json
-          ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'anythingsoundsgood'
