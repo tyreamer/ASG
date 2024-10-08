@@ -69,7 +69,7 @@ if (builder.Environment.IsDevelopment())
 }
 else
 {
-    var connectionString = Environment.GetEnvironmentVariable("ASG_DB_CONNECTION_STRING");
+    var connectionString = builder.Configuration.GetConnectionString("ASG_DB_CONNECTION_STRING");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString + ";TrustServerCertificate=True"));
 //TODO: update with cert
