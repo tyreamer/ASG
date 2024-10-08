@@ -86,3 +86,9 @@ jobs:
           app-name: 'anythingsoundsgood'
           slot-name: 'Production'
           package: ./deploy
+
+      - name: Set environment variables
+        env:
+          ASG_DB_PW: ${{ secrets.ASG_DB_PW }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}          
+        run: echo "Environment variables set."
