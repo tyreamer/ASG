@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Debugging step to list directory structure
+      # Debugging step (optional, can be removed once confirmed)
       - name: List files for debugging
         run: ls -R
 
@@ -23,10 +23,10 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release ./ASGBackend/ASGBackend.csproj  # Adjust path if needed
+        run: dotnet build --configuration Release ./ASGBackend/ASGBackend.csproj
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ./ASGBackend ./ASGBackend/ASGBackend.csproj  # Adjust path if needed
+        run: dotnet publish -c Release -o ./ASGBackend ./ASGBackend/ASGBackend.csproj
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -65,9 +65,10 @@ jobs:
       - name: Install EF Tools
         run: dotnet tool install --global dotnet-ef
 
-      # Apply EF Migrations
+      # Apply EF Migrations with working directory set
       - name: Apply EF Migrations
-        run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING --project ./ASGBackend/ASGBackend.csproj  # Adjust path if needed
+        run: dotnet ef database update --connection $ASG_DB_CONNECTION_STRING
+        working-directory: ./ASGBackend  # Set working directory to ASGBackend
         env:
           ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
 
