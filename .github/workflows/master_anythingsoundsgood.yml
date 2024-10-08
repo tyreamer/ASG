@@ -57,9 +57,8 @@ jobs:
 
       - name: Set environment variables
         env:
-          ASG_DB_PW: ${{ secrets.ASG_DB_PW }}
+          ASG_DB_CONNECTION_STRING: ${{ secrets.ASG_DB_CONNECTION_STRING }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GOOGLE_APPLICATION_CREDENTIALS_B64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
         run: echo "Environment variables set."
 
       # Decode the base64-encoded Firebase credentials and write them to a JSON file
