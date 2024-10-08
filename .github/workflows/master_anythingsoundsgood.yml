@@ -13,33 +13,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Step 1: Set up .NET Core environment
+      # Set up .NET Core environment
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
 
-      # Step 2: Restore dependencies for all projects (Backend, Blazor, Shared)
+      # Restore dependencies
       - name: Restore Dependencies
         run: dotnet restore
 
-      # Step 3: Build all projects (Backend, Blazor, Shared)
+      # Build all projects
       - name: Build Solution
         run: dotnet build --configuration Release
 
-      # Step 4: Publish the Backend (ASGBackend)
+      # Publish the Backend
       - name: Publish Backend
         run: dotnet publish ./ASGBackend/ASGBackend.csproj -c Release -o ./publish/Backend
 
-      # Step 5: Publish Blazor WebAssembly Frontend (ASGClient)
-      - name: Publish Blazor WebAssembly
-        run: dotnet publish ./ASGClient/ASGClient.csproj -c Release -o ./publish/Client
+      # Verify publish output
+      - name: List files in publish directory
+        run: ls -la ./publish/
 
-      # Step 6: Copy Blazor Frontend to Backend's wwwroot
-      - name: Copy Blazor Frontend to Backend's wwwroot
-        run: cp -r ./publish/Client/* ./publish/Backend/wwwroot/
-
-      # Step 7: Upload artifact for deployment
+      # Upload artifact for deployment job
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
@@ -75,7 +71,7 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_B64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
         run: echo "Environment variables set."
 
-      # Step 8: Deploy to Azure Web App
+      # Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
