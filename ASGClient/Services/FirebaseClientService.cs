@@ -6,13 +6,13 @@ using System.Text.Json;
 
 namespace ASG.Services
 {
-    public class FirebaseService
+    public class FirebaseClientService
     {
         private readonly IJSRuntime _jsRuntime;
         private readonly ILocalStorageService _localStorage;
         private readonly AuthenticationStateProvider _authStateProvider;
 
-        public FirebaseService(IJSRuntime jsRuntime, ILocalStorageService localStorage, AuthenticationStateProvider authStateProvider)
+        public FirebaseClientService(IJSRuntime jsRuntime, ILocalStorageService localStorage, AuthenticationStateProvider authStateProvider)
         {
             _jsRuntime = jsRuntime;
             _localStorage = localStorage;

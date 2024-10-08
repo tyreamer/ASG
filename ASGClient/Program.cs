@@ -10,7 +10,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 
 // Register services
-builder.Services.AddScoped<FirebaseService>();
+builder.Services.AddScoped<FirebaseClientService>();
 builder.Services.AddScoped<TokenManagerService>();
 builder.Services.AddScoped<TokenValidationService>();
 builder.Services.AddBlazoredLocalStorage();
