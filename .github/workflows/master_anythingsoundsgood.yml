@@ -19,28 +19,32 @@ jobs:
         with:
           dotnet-version: '8.x'
 
-      # Restore dependencies
+      # Restore dependencies for all projects (ASGBackend, ASGClient, ASGShared)
       - name: Restore Dependencies
         run: dotnet restore
 
-      # Build all projects
+      # Build all projects (Backend, Blazor, Shared)
       - name: Build Solution
         run: dotnet build --configuration Release
 
-      # Publish the Backend
+      # Publish the Backend (ASGBackend)
       - name: Publish Backend
-        run: dotnet publish ./ASGBackend/ASGBackend.csproj -c Release -o ./publish/Backend
+        run: dotnet publish ./ASGBackend/ASGBackend.csproj -c Release -o ./ASGBackend
 
-      # Verify publish output
-      - name: List files in publish directory
-        run: ls -la ./publish/
+      # Publish the Blazor WebAssembly (ASGClient) - Output into a separate folder
+      - name: Publish Blazor WebAssembly
+        run: dotnet publish ./ASGClient/ASGClient.csproj -c Release -o ./ASGClient
 
-      # Upload artifact for deployment job
+      # Copy Blazor Frontend (ASGClient) to Backend's wwwroot so it can be served
+      - name: Copy Blazor Frontend to Backend's wwwroot
+        run: cp -r ./ASGClient/* ./ASGBackend/wwwroot/
+
+      # Upload artifact for deployment job (Backend with Blazor frontend inside wwwroot)
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: ./publish/Backend
+          path: ./ASGBackend
 
   deploy:
     runs-on: windows-latest
@@ -77,4 +81,4 @@ jobs:
         with:
           app-name: 'anythingsoundsgood'
           slot-name: 'Production'
-          package: ./publish/Backend
+          package: ./ASGBackend
