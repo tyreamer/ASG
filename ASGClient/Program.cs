@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using ASGClient;
 using MudBlazor.Services;
 using System.Net.Http;
+using System.ComponentModel.Design;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -18,10 +19,15 @@ builder.Services.AddScoped<AuthenticationStateProvider, ASGAuthenticationStatePr
 builder.Services.AddScoped<AuthenticationService>();
 builder.Services.AddMudServices();
 builder.Services.AddAuthorizationCore();
+
+var isDevelopment = builder.HostEnvironment.IsDevelopment();
+
 builder.Services.AddHttpClient("ASGClient", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5050");
+    client.BaseAddress = isDevelopment ? new Uri("http://localhost:5050") : new Uri("anythingsoundsgood-dmfwewbfd3esa4ey.canadaeast-01.azurewebsites.net");
 });
+
+
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("ASGClient"));
 builder.Services.AddScoped<MealPlanClientService>();
 builder.Services.AddScoped<UserClientService>();
