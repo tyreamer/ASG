@@ -1,4 +1,7 @@
-name: Build and Deploy Full Stack App to Azure Web App - anythingsoundsgood
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: anythingsoundsgood backend
 
 on:
   push:
@@ -13,44 +16,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Set up .NET Core environment
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
 
-      # Restore dependencies for all projects (ASGBackend, ASGClient, ASGShared)
-      - name: Restore Dependencies
-        run: dotnet restore
-
-      # Build all projects (Backend, Blazor, Shared)
-      - name: Build Solution
+      - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      # Publish the Backend (ASGBackend)
-      - name: Publish Backend
-        run: dotnet publish ./ASGBackend/ASGBackend.csproj -c Release -o ./publish/ASGBackend
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ./ASGBackend
 
-      # Publish the Blazor WebAssembly (ASGClient)
-      - name: Publish Blazor WebAssembly
-        run: dotnet publish ./ASGClient/ASGClient.csproj -c Release -o ./publish/ASGClient
-
-      # Copy Blazor Frontend to Backend's wwwroot using PowerShell Copy-Item
-      - name: Copy Blazor Frontend to Backend's wwwroot
-        run: |
-          Write-Host "Copying Blazor frontend to Backend wwwroot"
-          # Copy static files from Blazor's output to the backend's wwwroot (without creating another 'wwwroot' folder)
-          Copy-Item -Path ./publish/ASGClient/wwwroot/* -Destination ./publish/ASGBackend/wwwroot/ -Recurse -Force
-          Copy-Item -Path ./publish/ASGClient/index.html -Destination ./publish/ASGBackend/wwwroot/ -Force
-          Copy-Item -Path ./publish/ASGClient/manifest.json -Destination ./publish/ASGBackend/wwwroot/ -Force
-          Copy-Item -Path ./publish/ASGClient/service-worker.js -Destination ./publish/ASGBackend/wwwroot/ -Force
-
-      # Upload artifact for deployment job (Backend with Blazor frontend inside wwwroot)
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: net-app
-          path: ./publish/ASGBackend
+          name: .net-app
+          path: ./ASGBackend
 
   deploy:
     runs-on: windows-latest
@@ -59,22 +40,14 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write # Required for requesting the JWT
+      id-token: write #This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: net-app
-          path: ./deploy  # Download artifact into the 'deploy' directory
-
-      # List downloaded files for debugging
-      - name: List downloaded files
-        run: |
-          Write-Host "Listing downloaded artifact files"
-          ls ./deploy
-          Write-Host "Listing complete"
-
+          name: .net-app
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -82,16 +55,26 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_87B8B694548D4E7FA66A1D58734A8DCC }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4E5F9F6FBC904078A687C0EF342EDEB6 }}
 
-      # Deploy to Azure Web App
+      - name: Set environment variables
+        env:
+          ASG_DB_PW: ${{ secrets.ASG_DB_PW }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS_B64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
+        run: echo "Environment variables set."
+
+      # Decode the base64-encoded Firebase credentials and write them to a JSON file
+      - name: Decode Firebase credentials
+        run: |
+          echo $GOOGLE_APPLICATION_CREDENTIALS_B64 | base64 --decode > $GITHUB_WORKSPACE/firebase_credentials.json
+        shell: bash
+
+      # Set GOOGLE_APPLICATION_CREDENTIALS to point to the created JSON file and deploy
       - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: $GITHUB_WORKSPACE/firebase_credentials.json
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'anythingsoundsgood'
           slot-name: 'Production'
-          package: ./deploy
-
-      - name: Set environment variables
-        env:
-          ASG_DB_PW: ${{ secrets.ASG_DB_PW }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}          
-        run: echo "Environment variables set."
+          package: .
