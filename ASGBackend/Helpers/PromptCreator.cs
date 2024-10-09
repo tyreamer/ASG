@@ -21,7 +21,7 @@ namespace ASGBackend.Helpers
             prompt += $" Cooking Skill level (1-10 where 10 is expert): {user.CookingSkillLevel}.\n";
             prompt += $" Household size: {user.HouseholdSize}.\n";
             prompt += $" Budget per meal constraint: {user.BudgetPerMeal}.\n";
-            prompt += $" Time constraint (total per recipe): {user.TotalTimeConstraintInMinutes}.\n";
+            prompt += $" Time constraint that MUST be honored (total time per recipe): {user.TotalTimeConstraintInMinutes}.\n";
 
             prompt += $"The response must be in valid JSON format with the following fields: Name, Ingredients (array of strings), Instructions (array of strings), CuisineType, Calories, PrepTime, CookingTime, TotalTime. (times should just be the minutes integer value)";
             prompt += $"Don't use abbreviations for ingredient units.";
