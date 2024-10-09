@@ -50,7 +50,7 @@
                 }
                 else
                 {
-                    <MudContainer Color="Color.Primary" MaxWidth="MaxWidth.Small" Class="d-flex flex-column align-center justify-center" Style="height: 100vh;">
+                    <MudContainer Color="Color.Primary" MaxWidth="MaxWidth.Small" Class="d-flex flex-column align-center justify-center" Style="height: 80vh;">
                         <MudPaper Elevation="0" Class="pa-8 d-flex flex-column align-center">
                             <MudContainer>
                                 <MudImage Src="/images/logo.png" Fluid="true" Height="40" ObjectPosition="ObjectPosition.Center"></MudImage>
@@ -82,7 +82,7 @@
 
 @code {
     private MudThemeProvider? _mudThemeProvider;
-    private bool _isDarkMode;
+    private bool _isDarkMode = false;
     private MudTheme ASGTheme = new MudTheme
         {
             PaletteLight = new PaletteLight()
@@ -125,11 +125,11 @@
     {
         if (firstRender)
         {
-            if (_mudThemeProvider != null)
-            {
-                _isDarkMode = await _mudThemeProvider.GetSystemPreference();
-                await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
-            }
+            // if (_mudThemeProvider != null)
+            // {
+            //     _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+            //     await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+            // }
 
             await CheckAuthenticationState();
             await LoadUserDisplayName();
