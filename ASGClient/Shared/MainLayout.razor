@@ -31,14 +31,14 @@
                 <MudAppBar Elevation="0" Color="Color.Primary">
                     <MudContainer>
                         <MudGrid Justify="Justify.SpaceBetween" AlignItems="center">
-                            <MudItem xs="8" sm="6" id="site_header" style="cursor:pointer" @onclick="@( () => Navigation.NavigateTo("/") )">
+                            <MudItem xs="8" sm="8" md="8" lg="8" xl="8" id="site_header" style="cursor:pointer" @onclick="@( () => Navigation.NavigateTo("/") )">
                                 <MudImage Src="/images/logo.png" Alt="Site Logo" Height="40" Class="rounded-md" />
                             </MudItem>
-                            
-                            <MudItem xs="2">
+
+                            <MudItem xs="2" sm="2" md="2" lg="2" xl="2">
                                 <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" Style="color: white;" OnClick="NavigateToSettings" />
                             </MudItem>
-                            <MudItem xs="2">                                
+                            <MudItem xs="2" sm="2" md="2" lg="2" xl="2">                                
                                 <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Style="color: white;" OnClick="Logout" />
                             </MudItem>
                         </MudGrid>
