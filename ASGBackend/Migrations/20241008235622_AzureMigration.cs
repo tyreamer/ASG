@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ASGBackend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class AzureMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -26,6 +26,22 @@ namespace ASGBackend.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "RecipeClassificationResults",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RecipeId = table.Column<int>(type: "int", nullable: false),
+                    ClassificationLabel = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Confidence = table.Column<float>(type: "real", nullable: false),
+                    ClassifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RecipeClassificationResults", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Recipes",
                 columns: table => new
                 {
@@ -36,11 +52,28 @@ namespace ASGBackend.Migrations
                     Instructions = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CuisineType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Calories = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CookingTime = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    PrepTime = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CookingTime = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TotalTime = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Recipes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserClusters",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ClusterId = table.Column<int>(type: "int", nullable: false),
+                    ClusteredAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserClusters", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -55,6 +88,7 @@ namespace ASGBackend.Migrations
                     BudgetPerMeal_Amount = table.Column<int>(type: "int", nullable: false),
                     BudgetPerMeal_Currency = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     HouseholdSize = table.Column<int>(type: "int", nullable: false),
+                    TotalTimeConstraintInMinutes = table.Column<int>(type: "int", nullable: false),
                     CookingSkillLevel = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -148,6 +182,12 @@ namespace ASGBackend.Migrations
         {
             migrationBuilder.DropTable(
                 name: "MealPlanRecipes");
+
+            migrationBuilder.DropTable(
+                name: "RecipeClassificationResults");
+
+            migrationBuilder.DropTable(
+                name: "UserClusters");
 
             migrationBuilder.DropTable(
                 name: "UserPreferences");

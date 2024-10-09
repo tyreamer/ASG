@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASGBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241001135840_TimeConstraint")]
-    partial class TimeConstraint
+    [Migration("20241008235622_AzureMigration")]
+    partial class AzureMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -115,6 +115,32 @@ namespace ASGBackend.Migrations
                     b.ToTable("Recipes");
                 });
 
+            modelBuilder.Entity("ASGShared.Models.RecipeClassificationResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClassificationLabel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ClassifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<float>("Confidence")
+                        .HasColumnType("real");
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RecipeClassificationResults");
+                });
+
             modelBuilder.Entity("ASGShared.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -151,6 +177,28 @@ namespace ASGBackend.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("ASGShared.Models.UserCluster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClusterId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ClusteredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserClusters");
                 });
 
             modelBuilder.Entity("ASGShared.Models.UserPreferences", b =>

@@ -29,7 +29,6 @@ builder.Logging.AddDebug();
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 //builder.Services.AddSingleton<FirebaseService>();
 
 // Configure HttpClient for GeminiService
@@ -134,7 +133,8 @@ else
 
 app.UseAuthorization();
 
+app.MapControllers(); // API routes are mapped first
 
-app.MapControllers();
+app.MapFallbackToFile("index.html");
 
 app.Run();

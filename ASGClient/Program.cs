@@ -26,7 +26,7 @@ builder.Services.AddHttpClient("ASGClient", client =>
 {
     client.BaseAddress = isDevelopment
     ? new Uri("http://localhost:5050")  // For local development
-    : new Uri(builder.HostEnvironment.BaseAddress);  // For production
+    : new Uri("https://asgbackend.azurewebsites.net/");  // For production
 });
 
 
