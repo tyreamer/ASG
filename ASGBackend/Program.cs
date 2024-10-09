@@ -110,26 +110,9 @@ var app = builder.Build();
 //    DataSeeder.SeedInitialData(dbContext);
 //}
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-else
-{
-    app.UseHttpsRedirection();
-}
+app.UseHttpsRedirection();
 
-
-if (builder.Environment.IsProduction())
-{
-    app.UseCors("AllowAll");
-}
-else
-{
-    app.UseCors("AllowAll");
-}
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 

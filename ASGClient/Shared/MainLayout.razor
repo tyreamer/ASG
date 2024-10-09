@@ -31,11 +31,14 @@
                 <MudAppBar Elevation="0" Color="Color.Primary">
                     <MudContainer>
                         <MudGrid Justify="Justify.SpaceBetween" AlignItems="center">
-                            <MudItem style="cursor:pointer" @onclick="@( () => Navigation.NavigateTo("/") )">
-                                <MudText Typo="Typo.h5">anything sounds good</MudText>
+                            <MudItem xs="8" sm="6" id="site_header" style="cursor:pointer" @onclick="@( () => Navigation.NavigateTo("/") )">
+                                <MudImage Src="/images/logo.png" Alt="Site Logo" Height="40" Class="rounded-md" />
                             </MudItem>
-                            <MudItem>
+                            
+                            <MudItem xs="2">
                                 <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" Style="color: white;" OnClick="NavigateToSettings" />
+                            </MudItem>
+                            <MudItem xs="2">                                
                                 <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Style="color: white;" OnClick="Logout" />
                             </MudItem>
                         </MudGrid>
