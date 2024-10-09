@@ -57,6 +57,7 @@ namespace ASG.Services
                     if (isRegistered)
                     {
                         _navigation.Refresh();
+                        return;
                     }
                 }
 

@@ -20,8 +20,7 @@
     {
         foreach (Recipe recipe in Recipes.Select(r => r.Recipe))
         {
-            //debugging
-            recipe.Name = recipe.Name + "(cached)";
+            recipe.Name = recipe.Name;
         }
 
         await localStorage.SetItemAsync(CacheKey, Recipes);
@@ -40,11 +39,12 @@
     <MudContainer Class="mb-8 recipe-container max-w-screen-md mx-auto">
         <MudPaper Elevation="0" Class="pa-4 rounded-lg shadow-sm border border-gray-500">
             <MudGrid>
-                <MudItem xs="9">
+                <MudItem xs="12" sm="9" Class="pb-2">
                     <MudText Typo="Typo.h6" Class="font-weight-bold">@recipe.Recipe.Name</MudText>
                 </MudItem>
-                <MudItem xs="3" Class="d-flex justify-end align-center">
-                    <MudText Typo="Typo.h5" Class="font-weight-bold pa-2 rounded">@recipe.Recipe.TotalTime minutes</MudText>
+                <MudItem xs="12" sm="3" Class="d-flex justify-start align-center pb-2">
+                    <MudIcon Icon="@Icons.Material.Outlined.Timer" Class="mr-1" />
+                    <MudText Typo="Typo.h5" Class="font-weight-bold pa-2 rounded">@recipe.Recipe.TotalTime min</MudText>
                 </MudItem>
             </MudGrid>
 
@@ -61,6 +61,12 @@
             <MudGrid Class="mt-2 align-center">
                 <MudItem xs="6" Class="d-flex">
                     <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Info" Size="Size.Small" Class="icon-hover-warning" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" Color="Color.Info" Size="Size.Small" Class="ml-2 icon-hover-warning" OnClick="() => OnDislikeRecipe.InvokeAsync(recipe.Recipe)" />
+                </MudItem>
+                <MudItem xs="6" Class="d-flex justify-end">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" OnClick="() => OnViewRecipe.InvokeAsync(recipe.Recipe)">
+                        VIEW RECIPE
+                    </MudButton>
                 </MudItem>
             </MudGrid>
         </MudPaper>
