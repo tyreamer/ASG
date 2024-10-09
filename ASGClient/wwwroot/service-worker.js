@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'asg-cache-v8';
+﻿const CACHE_NAME = 'asg-cache-v10';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',

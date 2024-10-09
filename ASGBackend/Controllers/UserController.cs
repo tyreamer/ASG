@@ -48,10 +48,6 @@ namespace ASGBackend.Controllers
             try
             {
                 var user = await _userService.GetUserAsync(userId);
-                if (user == null)
-                {
-                    return NotFound();
-                }
 
                 return Ok(user);
             }
@@ -67,9 +63,9 @@ namespace ASGBackend.Controllers
         {
             var user = await _userService.GetUserByEmailAsync(email);
 
-            if (user == null)
+            if (user == null || user.Id == new Guid())
             {
-                return NotFound();
+                return Ok(new User());
             }
 
             return Ok(user);
@@ -87,7 +83,7 @@ namespace ASGBackend.Controllers
                 if (user == null)
                 {
                     _logger.LogWarning($"User with email {email} not found");
-                    return NotFound();
+                    return Ok(false);
                 }
 
                 var isFullyRegistered = await _userService.ValidateFullyRegistered(user.Id);
@@ -113,7 +109,7 @@ namespace ASGBackend.Controllers
                 var user = await _userService.UpdateUserAsync(id, updatedUser);
                 if (user == null)
                 {
-                    return NotFound();
+                    return Ok(new User());
                 }
 
                 return Ok(user);
@@ -152,7 +148,7 @@ namespace ASGBackend.Controllers
 
             if (preferences == null)
             {
-                return NotFound();
+                return Ok(new UserPreferences());
             }
 
             return Ok(preferences);
@@ -164,7 +160,7 @@ namespace ASGBackend.Controllers
             var result = await _userService.UpdateUserPreferencesAsync(userId, updatedPreferences);
             if (result == null)
             {
-                return NotFound();
+                return Ok(new UserPreferences());
             }
             return Ok(result);
         }
