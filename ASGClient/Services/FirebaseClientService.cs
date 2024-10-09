@@ -25,12 +25,13 @@ namespace ASG.Services
 
             if (user == null)
             {
-                return null;
+                return new FirebaseUser();
             }
 
             if (!user.TryGetValue("stsTokenManager", out var stsTokenManagerJson) || stsTokenManagerJson == null)
             {
-                throw new KeyNotFoundException("The key 'stsTokenManager' was not found in the dictionary.");
+                Console.WriteLine("The key 'stsTokenManager' was not found in the dictionary.");
+                return new FirebaseUser();
             }
 
             // Deserialize the stsTokenManager using JsonElement

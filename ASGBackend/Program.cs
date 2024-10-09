@@ -61,23 +61,23 @@ builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IMealPlanRepository, MealPlanRepository>();
 
-// Database
-//if (builder.Environment.IsDevelopment())
-//{
-//    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") + ";TrustServerCertificate=True"));
-//}
-//else
-//{
+//Database
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") + ";TrustServerCertificate=True"));
+}
+else
+{
     var connectionString = builder.Configuration.GetConnectionString("ASG_DB_CONNECTION_STRING");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString + ";TrustServerCertificate=True", sqlOptions =>
         sqlOptions.EnableRetryOnFailure())
     );
-//TODO: update with cert
-//}
+//TODO: update with cert?
+}
 
-   
+
 
 
 builder.Services.AddControllers();
